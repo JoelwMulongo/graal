@@ -44,6 +44,7 @@ import org.graalvm.compiler.nodes.StructuredGraph;
 import org.graalvm.compiler.nodes.ValueNode;
 import org.graalvm.compiler.nodes.ValuePhiNode;
 import org.graalvm.compiler.nodes.calc.FloatConvertNode;
+import org.graalvm.compiler.nodes.calc.ReinterpretNode;
 import org.graalvm.compiler.nodes.memory.OnHeapMemoryAccess.BarrierType;
 import org.graalvm.compiler.nodes.memory.address.OffsetAddressNode;
 import org.graalvm.compiler.word.WordTypes;
@@ -114,6 +115,8 @@ public class JNIJavaCallVariantWrapperMethod extends EntryPointCallStubMethod {
                 JavaKind kind = callWrapperSignature.getParameterKind(i);
                 if (kind.isObject()) {
                     args.add(wordKind); // handle
+                } else if (Platform.includedIn(Platform.RISCV64.class) && (kind == JavaKind.Float || kind == JavaKind.Double)) {
+                    args.add(JavaKind.Long);
                 } else if (kind == JavaKind.Float) {
                     // C varargs promote float to double (C99, 6.5.2.2-6)
                     args.add(JavaKind.Double);
@@ -256,10 +259,15 @@ public class JNIJavaCallVariantWrapperMethod extends EntryPointCallStubMethod {
                 JavaKind kind = invokeSignature.getParameterKind(i);
                 assert kind == kind.getStackKind() : "sub-int conversions and bit masking must happen in JNIJavaCallWrapperMethod";
                 JavaKind loadKind = kind;
-                if (loadKind == JavaKind.Float) {
+                if (Platform.includedIn(Platform.RISCV64.class) && (kind == JavaKind.Double || kind == JavaKind.Float)) {
+                    loadKind = JavaKind.Long;
+                } else if (loadKind == JavaKind.Float) {
                     loadKind = JavaKind.Double; // C varargs promote float to double (C99 6.5.2.2-6)
                 }
                 ValueNode value = kit.loadLocal(slotIndex, loadKind);
+                if (Platform.includedIn(Platform.RISCV64.class) && (kind == JavaKind.Double || kind == JavaKind.Float)) {
+                    value = kit.unique(new ReinterpretNode(JavaKind.Double, value));
+                }
                 if (kind == JavaKind.Float) {
                     value = kit.unique(new FloatConvertNode(FloatConvert.D2F, value));
                 }
@@ -274,7 +282,7 @@ public class JNIJavaCallVariantWrapperMethod extends EntryPointCallStubMethod {
                     kind = wordKind;
                 }
                 assert kind == kind.getStackKind() : "sub-int conversions and bit masking must happen in JNIJavaCallWrapperMethod";
-                ValueNode value = kit.append(new VaListNextArgNode(kind, valist));
+                ValueNode value = kit.append(new VaListNextArgNode(kind, valist, i - firstParamIndex));
                 args.add(value);
             }
         } else {
