@@ -26,6 +26,8 @@ package com.oracle.svm.core.cpufeature;
 
 import static org.graalvm.compiler.nodes.extended.BranchProbabilityNode.LIKELY_PROBABILITY;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -364,6 +366,15 @@ public final class RuntimeCPUFeatureCheckImpl {
             return ((AMD64) arch).getFeatures();
         } else if (arch instanceof AArch64) {
             return ((AArch64) arch).getFeatures();
+        } else if (arch.getName().equals("riscv64")) {
+            try {
+                Method createTarget = ReflectionUtil.lookupMethod(Class.forName("jdk.vm.ci.riscv64.RISCV64"), "getFeatures");
+                createTarget.setAccessible(true);
+                return (EnumSet<?>) createTarget.invoke(arch);
+            } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+                throw GraalError.shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
+            }
         } else {
             throw GraalError.shouldNotReachHere("unsupported architecture");
         }
