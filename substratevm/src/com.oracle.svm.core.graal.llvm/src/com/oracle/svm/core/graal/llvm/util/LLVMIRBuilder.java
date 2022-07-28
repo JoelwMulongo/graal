@@ -1186,12 +1186,33 @@ public class LLVMIRBuilder implements AutoCloseable {
         return buildLoad(castedAddress);
     }
 
+    public LLVMValueRef buildAlignedLoad(LLVMValueRef address, LLVMTypeRef type, int alignment) {
+        LLVMTypeRef addressType = LLVM.LLVMTypeOf(address);
+        if (isObjectType(type) && !isObjectType(addressType)) {
+            boolean compressed = isCompressedPointerType(type);
+            return buildCall(helpers.getLoadObjectFromUntrackedPointerFunction(compressed), address);
+        }
+        LLVMValueRef castedAddress = buildBitcast(address, pointerType(type, isObjectType(addressType), false));
+        return buildAlignedLoad(castedAddress, alignment);
+    }
+
     public LLVMValueRef buildLoad(LLVMValueRef address) {
         return LLVM.LLVMBuildLoad(builder, address, DEFAULT_INSTR_NAME);
     }
 
+    public LLVMValueRef buildAlignedLoad(LLVMValueRef address, int alignment) {
+        LLVMValueRef load = LLVM.LLVMBuildLoad(builder, address, DEFAULT_INSTR_NAME);
+        LLVM.LLVMSetAlignment(load, alignment);
+        return load;
+    }
+
     public void buildStore(LLVMValueRef value, LLVMValueRef address) {
         LLVM.LLVMBuildStore(builder, value, address);
+    }
+
+    public void buildAlignedStore(LLVMValueRef value, LLVMValueRef address, int alignment) {
+        LLVMValueRef store = LLVM.LLVMBuildStore(builder, value, address);
+        LLVM.LLVMSetAlignment(store, alignment);
     }
 
     public void buildVolatileStore(LLVMValueRef value, LLVMValueRef address, int alignment) {
