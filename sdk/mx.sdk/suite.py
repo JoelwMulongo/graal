@@ -107,6 +107,9 @@ suite = {
           "aarch64" : {
             "sha1" : "91acc0b24ae5fe9b13d1d313c851b7b308b66aa6",
             "urls": ["https://lafo.ssw.uni-linz.ac.at/pub/graal-external-deps/upx/upx-3.96-arm64_linux.tar.gz"],
+          },
+          "<others>" : {
+            "optional": True,
           }
         },
         "windows" : {
