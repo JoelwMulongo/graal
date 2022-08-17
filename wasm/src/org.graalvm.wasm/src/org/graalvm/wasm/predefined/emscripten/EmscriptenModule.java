@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * The Universal Permissive License (UPL), Version 1.0
@@ -47,9 +47,9 @@ import org.graalvm.wasm.WasmContext;
 import org.graalvm.wasm.WasmInstance;
 import org.graalvm.wasm.WasmLanguage;
 import org.graalvm.wasm.WasmModule;
+import org.graalvm.wasm.WasmType;
 import org.graalvm.wasm.constants.GlobalModifier;
 import org.graalvm.wasm.predefined.BuiltinModule;
-import org.graalvm.wasm.ReferenceTypes;
 import org.graalvm.wasm.predefined.testutil.TestutilModule;
 import org.graalvm.wasm.predefined.wasi.WasiFdWriteNode;
 
@@ -91,7 +91,7 @@ public class EmscriptenModule extends BuiltinModule {
         defineGlobal(instance, "_memory_base", I32_TYPE, (byte) GlobalModifier.CONSTANT, 0);
         defineGlobal(instance, "DYNAMICTOP_PTR", I32_TYPE, (byte) GlobalModifier.CONSTANT, 0);
         defineGlobal(instance, "DYNAMIC_BASE", I32_TYPE, (byte) GlobalModifier.CONSTANT, 0);
-        defineTable(instance, "table", 0, -1, ReferenceTypes.FUNCREF);
+        defineTable(instance, "table", 0, -1, WasmType.FUNCREF_TYPE);
         return instance;
     }
 }
