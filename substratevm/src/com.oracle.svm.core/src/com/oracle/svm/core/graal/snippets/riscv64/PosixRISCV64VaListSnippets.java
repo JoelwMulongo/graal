@@ -130,7 +130,7 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
             }
             Arguments args = new Arguments(snippet, node.graph().getGuardsStage(), tool.getLoweringStage());
             args.add("vaList", node.getVaList());
-            args.add("offset", node.getParameterOffset() * 8);
+            args.add("offset", node.getParameterIndex() * 8);
             template(node, args).instantiate(providers.getMetaAccess(), node, SnippetTemplate.DEFAULT_REPLACER, args);
         }
     }

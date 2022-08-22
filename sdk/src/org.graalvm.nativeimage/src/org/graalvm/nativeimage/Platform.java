@@ -147,7 +147,7 @@ public interface Platform {
     }
 
     /**
-     * Returns string representing RISCV64 architecture.
+     * Supported architecture: RISC-V 64-bit.
      *
      * @since 22.2
      */

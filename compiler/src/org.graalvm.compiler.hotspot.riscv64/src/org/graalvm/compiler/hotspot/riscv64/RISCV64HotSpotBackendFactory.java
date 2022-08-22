@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.graalvm.compiler.core.common.alloc.RegisterAllocationConfig;
+import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
 import org.graalvm.compiler.debug.GraalError;
 import org.graalvm.compiler.hotspot.GraalHotSpotVMConfig;
 import org.graalvm.compiler.hotspot.HotSpotBackend;
@@ -52,7 +53,7 @@ import org.graalvm.compiler.nodes.graphbuilderconf.GraphBuilderConfiguration.Plu
 import org.graalvm.compiler.nodes.spi.CoreProviders;
 import org.graalvm.compiler.options.OptionValues;
 import org.graalvm.compiler.phases.BasePhase;
-import org.graalvm.compiler.phases.common.AddressLoweringByUsePhase;
+import org.graalvm.compiler.phases.common.AddressLoweringPhase;
 import org.graalvm.compiler.phases.tiers.CompilerConfiguration;
 import org.graalvm.compiler.serviceprovider.ServiceProvider;
 
@@ -75,10 +76,10 @@ public class RISCV64HotSpotBackendFactory extends HotSpotBackendFactory {
 
     @Override
     public Class<? extends Architecture> getArchitecture() {
-        try {
-            return Class.forName("jdk.vm.ci.riscv64.RISCV64").asSubclass(Architecture.class);
-        } catch (ClassNotFoundException e) {
-            // Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V
+        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(true, "jdk.vm.ci.riscv64.RISCV64");
+        if (riscv64 != null) {
+            return riscv64.asSubclass(Architecture.class);
+        } else {
             return null;
         }
     }
@@ -118,17 +119,12 @@ public class RISCV64HotSpotBackendFactory extends HotSpotBackendFactory {
 
     @Override
     protected HotSpotRegistersProvider createRegisters() {
-        try {
-            Class<?> riscv64 = Class.forName("jdk.vm.ci.riscv64.RISCV64");
-            Class<?> riscv64HotSpotRegisterConfig = Class.forName("jdk.vm.ci.hotspot.riscv64.RISCV64HotSpotRegisterConfig");
-            Register tp = (Register) riscv64HotSpotRegisterConfig.getField("tp").get(null);
-            Register x27 = (Register) riscv64.getField("x27").get(null);
-            Register sp = (Register) riscv64HotSpotRegisterConfig.getField("sp").get(null);
-            return new HotSpotRegisters(tp, x27, sp);
-        } catch (IllegalAccessException | ClassNotFoundException | NoSuchFieldException e) {
-            e.printStackTrace();
-            throw GraalError.shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
-        }
+        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+        Class<?> riscv64HotSpotRegisterConfig = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.hotspot.riscv64.RISCV64HotSpotRegisterConfig");
+        Register tp = RISCV64ReflectionUtil.readStaticField(riscv64HotSpotRegisterConfig, "tp");
+        Register x27 = RISCV64ReflectionUtil.readStaticField(riscv64, "x27");
+        Register sp = RISCV64ReflectionUtil.readStaticField(riscv64HotSpotRegisterConfig, "sp");
+        return new HotSpotRegisters(tp, x27, sp);
     }
 
     @Override
@@ -141,7 +137,7 @@ public class RISCV64HotSpotBackendFactory extends HotSpotBackendFactory {
     protected HotSpotSuitesProvider createSuites(GraalHotSpotVMConfig config, HotSpotGraalRuntimeProvider runtime, CompilerConfiguration compilerConfiguration, Plugins plugins,
                     HotSpotRegistersProvider registers, HotSpotReplacementsImpl replacements, OptionValues options) {
         DefaultSuitesCreator suitesCreator = new DefaultSuitesCreator(compilerConfiguration, plugins);
-        BasePhase<CoreProviders> addressLoweringPhase = new AddressLoweringByUsePhase(null);
+        BasePhase<CoreProviders> addressLoweringPhase = new AddressLoweringPhase(null);
         return new AddressLoweringHotSpotSuitesProvider(suitesCreator, config, runtime, addressLoweringPhase);
     }
 
@@ -156,39 +152,34 @@ public class RISCV64HotSpotBackendFactory extends HotSpotBackendFactory {
     protected Value[] createNativeABICallerSaveRegisters(@SuppressWarnings("unused") GraalHotSpotVMConfig config, RegisterConfig regConfig) {
         List<Register> callerSave = new ArrayList<>(regConfig.getAllocatableRegisters().asList());
         // Removing callee-saved registers.
-        try {
-            Class<?> riscv64 = Class.forName("jdk.vm.ci.riscv64.RISCV64");
-            /* General Purpose Registers. */
-            callerSave.remove(riscv64.getField("x2").get(null));
-            callerSave.remove(riscv64.getField("x8").get(null));
-            callerSave.remove(riscv64.getField("x9").get(null));
-            callerSave.remove(riscv64.getField("x10").get(null));
-            callerSave.remove(riscv64.getField("x19").get(null));
-            callerSave.remove(riscv64.getField("x20").get(null));
-            callerSave.remove(riscv64.getField("x21").get(null));
-            callerSave.remove(riscv64.getField("x22").get(null));
-            callerSave.remove(riscv64.getField("x23").get(null));
-            callerSave.remove(riscv64.getField("x24").get(null));
-            callerSave.remove(riscv64.getField("x25").get(null));
-            callerSave.remove(riscv64.getField("x26").get(null));
-            callerSave.remove(riscv64.getField("x27").get(null));
-            /* Floating-Point Registers. */
-            callerSave.remove(riscv64.getField("f8").get(null));
-            callerSave.remove(riscv64.getField("f9").get(null));
-            callerSave.remove(riscv64.getField("f10").get(null));
-            callerSave.remove(riscv64.getField("f19").get(null));
-            callerSave.remove(riscv64.getField("f20").get(null));
-            callerSave.remove(riscv64.getField("f21").get(null));
-            callerSave.remove(riscv64.getField("f22").get(null));
-            callerSave.remove(riscv64.getField("f23").get(null));
-            callerSave.remove(riscv64.getField("f24").get(null));
-            callerSave.remove(riscv64.getField("f25").get(null));
-            callerSave.remove(riscv64.getField("f26").get(null));
-            callerSave.remove(riscv64.getField("f27").get(null));
-        } catch (ClassNotFoundException | IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
-            throw GraalError.shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
-        }
+        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+        /* General Purpose Registers. */
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x2"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x8"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x9"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x10"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x19"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x20"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x21"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x22"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x23"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x24"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x25"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x26"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x27"));
+        /* Floating-Point Registers. */
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f8"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f9"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f10"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f19"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f20"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f21"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f22"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f23"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f24"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f25"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f26"));
+        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f27"));
 
         Value[] nativeABICallerSaveRegisters = new Value[callerSave.size()];
         for (int i = 0; i < callerSave.size(); i++) {

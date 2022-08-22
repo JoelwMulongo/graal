@@ -1176,24 +1176,22 @@ public class LLVMIRBuilder implements AutoCloseable {
         return LLVM.LLVMBuildGEP(builder, base, new PointerPointer<>(indices), indices.length, DEFAULT_INSTR_NAME);
     }
 
-    public LLVMValueRef buildLoad(LLVMValueRef address, LLVMTypeRef type) {
+    private LLVMValueRef buildLoadHelper(LLVMValueRef address, LLVMTypeRef type, int alignment) {
         LLVMTypeRef addressType = LLVM.LLVMTypeOf(address);
         if (isObjectType(type) && !isObjectType(addressType)) {
             boolean compressed = isCompressedPointerType(type);
             return buildCall(helpers.getLoadObjectFromUntrackedPointerFunction(compressed), address);
         }
         LLVMValueRef castedAddress = buildBitcast(address, pointerType(type, isObjectType(addressType), false));
-        return buildLoad(castedAddress);
+        return alignment > 0 ? buildAlignedLoad(castedAddress, alignment) : buildLoad(castedAddress);
+    }
+
+    public LLVMValueRef buildLoad(LLVMValueRef address, LLVMTypeRef type) {
+        return buildLoadHelper(address, type, 0);
     }
 
     public LLVMValueRef buildAlignedLoad(LLVMValueRef address, LLVMTypeRef type, int alignment) {
-        LLVMTypeRef addressType = LLVM.LLVMTypeOf(address);
-        if (isObjectType(type) && !isObjectType(addressType)) {
-            boolean compressed = isCompressedPointerType(type);
-            return buildCall(helpers.getLoadObjectFromUntrackedPointerFunction(compressed), address);
-        }
-        LLVMValueRef castedAddress = buildBitcast(address, pointerType(type, isObjectType(addressType), false));
-        return buildAlignedLoad(castedAddress, alignment);
+        return buildLoadHelper(address, type, alignment);
     }
 
     public LLVMValueRef buildLoad(LLVMValueRef address) {

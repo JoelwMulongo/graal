@@ -26,7 +26,6 @@ package com.oracle.svm.core.cpufeature;
 
 import static org.graalvm.compiler.nodes.extended.BranchProbabilityNode.LIKELY_PROBABILITY;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -36,6 +35,7 @@ import java.util.Set;
 import org.graalvm.compiler.api.replacements.Fold;
 import org.graalvm.compiler.api.replacements.SnippetReflectionProvider;
 import org.graalvm.compiler.core.common.NumUtil;
+import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
 import org.graalvm.compiler.debug.GraalError;
 import org.graalvm.compiler.graph.Node.InjectedNodeParameter;
 import org.graalvm.compiler.graph.Node.NodeIntrinsicFactory;
@@ -367,14 +367,9 @@ public final class RuntimeCPUFeatureCheckImpl {
         } else if (arch instanceof AArch64) {
             return ((AArch64) arch).getFeatures();
         } else if (arch.getName().equals("riscv64")) {
-            try {
-                Method createTarget = ReflectionUtil.lookupMethod(Class.forName("jdk.vm.ci.riscv64.RISCV64"), "getFeatures");
-                createTarget.setAccessible(true);
-                return (EnumSet<?>) createTarget.invoke(arch);
-            } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-                throw GraalError.shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
-            }
+            Method getFeatures = RISCV64ReflectionUtil.lookupMethod(RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64"), "getFeatures");
+            getFeatures.setAccessible(true);
+            return (EnumSet<?>) RISCV64ReflectionUtil.invokeMethod(getFeatures, arch);
         } else {
             throw GraalError.shouldNotReachHere("unsupported architecture");
         }

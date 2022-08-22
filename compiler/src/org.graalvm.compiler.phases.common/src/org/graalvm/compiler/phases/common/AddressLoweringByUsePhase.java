@@ -62,7 +62,7 @@ public class AddressLoweringByUsePhase extends BasePhase<CoreProviders> {
 
     public AddressLoweringByUsePhase(AddressLoweringByUse lowering) {
         this.lowering = lowering;
-        // assert lowering != null;
+        assert lowering != null;
     }
 
     @Override

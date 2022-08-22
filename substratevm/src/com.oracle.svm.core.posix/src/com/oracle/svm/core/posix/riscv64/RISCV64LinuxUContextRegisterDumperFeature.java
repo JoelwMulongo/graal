@@ -26,7 +26,7 @@ package com.oracle.svm.core.posix.riscv64;
 
 import static com.oracle.svm.core.RegisterDumper.dumpReg;
 
-import org.graalvm.compiler.debug.GraalError;
+import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
 import org.graalvm.nativeimage.ImageSingletons;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
@@ -42,21 +42,15 @@ import com.oracle.svm.core.log.Log;
 import com.oracle.svm.core.posix.UContextRegisterDumper;
 import com.oracle.svm.core.posix.headers.Signal;
 import com.oracle.svm.core.util.VMError;
-import com.oracle.svm.util.ReflectionUtil;
 
 @Platforms({Platform.LINUX_RISCV64.class})
 @AutomaticallyRegisteredFeature
 class RISCV64LinuxUContextRegisterDumperFeature implements InternalFeature {
     @Override
     public void afterRegistration(AfterRegistrationAccess access) {
-        try {
-            Class<?> riscv64 = Class.forName("jdk.vm.ci.riscv64.RISCV64");
-            VMError.guarantee(ReflectionUtil.lookupField(riscv64, "x27").get(null).equals(RISCV64ReservedRegisters.heapBaseRegisterCandidate));
-            VMError.guarantee(ReflectionUtil.lookupField(riscv64, "x4").get(null).equals(RISCV64ReservedRegisters.threadRegisterCandidate));
-        } catch (ClassNotFoundException | IllegalAccessException e) {
-            e.printStackTrace();
-            throw GraalError.shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
-        }
+        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+        VMError.guarantee(RISCV64ReflectionUtil.readStaticField(riscv64, "x27").equals(RISCV64ReservedRegisters.heapBaseRegisterCandidate));
+        VMError.guarantee(RISCV64ReflectionUtil.readStaticField(riscv64, "x23").equals(RISCV64ReservedRegisters.threadRegisterCandidate));
         ImageSingletons.add(RegisterDumper.class, new RISCV64LinuxUContextRegisterDumper());
     }
 }

@@ -123,7 +123,7 @@ public interface LLVMTargetSpecific {
     /**
      * Condition for adding section in sections info to avoid duplicates.
      */
-    default boolean isValidSection(@SuppressWarnings("unused") String symbol) {
+    default boolean isSymbolValid(@SuppressWarnings("unused") String symbol) {
         return true;
     }
 
@@ -398,7 +398,7 @@ class LLVMRISCV64TargetSpecificFeature implements InternalFeature {
              * must remove when we parse the code at the linking step.
              */
             @Override
-            public boolean isValidSection(String section) {
+            public boolean isSymbolValid(String section) {
                 return !section.isEmpty() && !section.startsWith(".LBB");
             }
 

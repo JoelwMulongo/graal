@@ -29,7 +29,7 @@ import static org.graalvm.compiler.hotspot.HotSpotForeignCallLinkage.JUMP_ADDRES
 import static org.graalvm.compiler.hotspot.HotSpotForeignCallLinkage.RegisterEffect.DESTROYS_ALL_CALLER_SAVE_REGISTERS;
 
 import org.graalvm.compiler.core.common.LIRKind;
-import org.graalvm.compiler.debug.GraalError;
+import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
 import org.graalvm.compiler.hotspot.HotSpotBackend;
 import org.graalvm.compiler.hotspot.HotSpotForeignCallLinkageImpl;
 import org.graalvm.compiler.hotspot.HotSpotGraalRuntimeProvider;
@@ -65,22 +65,17 @@ public class RISCV64HotSpotForeignCallsProvider extends HotSpotHostForeignCallsP
 
         // The calling convention for the exception handler stub is (only?) defined in
         // TemplateInterpreterGenerator::generate_throw_exception()
-        try {
-            Class<?> riscv64 = Class.forName("jdk.vm.ci.riscv64.RISCV64");
+        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
 
-            RegisterValue exception = ((Register) riscv64.getField("x5").get(null)).asValue(LIRKind.reference(word));
-            RegisterValue exceptionPc = ((Register) riscv64.getField("x7").get(null)).asValue(LIRKind.value(word));
+        RegisterValue exception = ((Register) RISCV64ReflectionUtil.readStaticField(riscv64, "x5")).asValue(LIRKind.reference(word));
+        RegisterValue exceptionPc = ((Register) RISCV64ReflectionUtil.readStaticField(riscv64, "x7")).asValue(LIRKind.value(word));
 
-            CallingConvention exceptionCc = new CallingConvention(0, ILLEGAL, exception, exceptionPc);
-            register(new HotSpotForeignCallLinkageImpl(HotSpotBackend.EXCEPTION_HANDLER, 0L, DESTROYS_ALL_CALLER_SAVE_REGISTERS, exceptionCc, null));
-            register(new HotSpotForeignCallLinkageImpl(HotSpotBackend.EXCEPTION_HANDLER_IN_CALLER, JUMP_ADDRESS, DESTROYS_ALL_CALLER_SAVE_REGISTERS, exceptionCc,
-                            null));
+        CallingConvention exceptionCc = new CallingConvention(0, ILLEGAL, exception, exceptionPc);
+        register(new HotSpotForeignCallLinkageImpl(HotSpotBackend.EXCEPTION_HANDLER, 0L, DESTROYS_ALL_CALLER_SAVE_REGISTERS, exceptionCc, null));
+        register(new HotSpotForeignCallLinkageImpl(HotSpotBackend.EXCEPTION_HANDLER_IN_CALLER, JUMP_ADDRESS, DESTROYS_ALL_CALLER_SAVE_REGISTERS, exceptionCc,
+                        null));
 
-            super.initialize(providers, options);
-        } catch (ClassNotFoundException | IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
-            throw GraalError.shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
-        }
+        super.initialize(providers, options);
     }
 
     @Override

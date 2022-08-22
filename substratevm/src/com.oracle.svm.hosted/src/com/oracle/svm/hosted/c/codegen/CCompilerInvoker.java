@@ -40,7 +40,7 @@ import java.util.Scanner;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.graalvm.compiler.debug.GraalError;
+import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
 import org.graalvm.compiler.serviceprovider.JavaVersionUtil;
 import org.graalvm.nativeimage.ImageSingletons;
 import org.graalvm.nativeimage.Platform;
@@ -440,12 +440,7 @@ public abstract class CCompilerInvoker {
             case "arm64": /* Darwin notation */
                 return AArch64.class;
             case "riscv64":
-                try {
-                    return (Class<? extends Architecture>) Class.forName("jdk.vm.ci.riscv64.RISCV64");
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                    throw GraalError.shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
-                }
+                return (Class<? extends Architecture>) RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
             case "i686":
             case "80x86": /* Windows notation */
             case "x86":

@@ -24,11 +24,11 @@
  */
 package com.oracle.svm.core.graal.riscv64;
 
+import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
 
 import com.oracle.svm.core.ReservedRegisters;
-import com.oracle.svm.util.ReflectionUtil;
 
 import jdk.vm.ci.code.Register;
 
@@ -39,12 +39,11 @@ public final class RISCV64ReservedRegisters extends ReservedRegisters {
     public static Register stackBaseRegisterCandidate;
 
     static {
-        try {
-            stackBaseRegisterCandidate = (Register) ReflectionUtil.lookupField(Class.forName("jdk.vm.ci.riscv64.RISCV64"), "x2").get(null);
-            threadRegisterCandidate = (Register) ReflectionUtil.lookupField(Class.forName("jdk.vm.ci.riscv64.RISCV64"), "x4").get(null);
-            heapBaseRegisterCandidate = (Register) ReflectionUtil.lookupField(Class.forName("jdk.vm.ci.riscv64.RISCV64"), "x27").get(null);
-        } catch (ClassNotFoundException | IllegalAccessException e) {
-            // Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V
+        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(true, "jdk.vm.ci.riscv64.RISCV64");
+        if (riscv64 != null) {
+            stackBaseRegisterCandidate = RISCV64ReflectionUtil.readStaticField(riscv64, "x2");
+            threadRegisterCandidate = RISCV64ReflectionUtil.readStaticField(riscv64, "x23");
+            heapBaseRegisterCandidate = RISCV64ReflectionUtil.readStaticField(riscv64, "x27");
         }
     }
 

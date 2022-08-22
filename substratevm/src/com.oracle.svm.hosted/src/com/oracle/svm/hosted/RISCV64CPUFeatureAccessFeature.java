@@ -24,11 +24,10 @@
  */
 package com.oracle.svm.hosted;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.EnumSet;
 
-import org.graalvm.compiler.debug.GraalError;
+import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
 import org.graalvm.nativeimage.ImageSingletons;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
@@ -49,18 +48,13 @@ class RISCV64CPUFeatureAccessFeature extends CPUFeatureAccessFeatureBase impleme
     @Override
     public void beforeAnalysis(BeforeAnalysisAccess arg) {
         var targetDescription = ImageSingletons.lookup(SubstrateTargetDescription.class);
-        try {
-            Method getFeatures = ReflectionUtil.lookupMethod(Architecture.class, "getFeatures");
-            var buildtimeCPUFeatures = getFeatures.invoke(targetDescription.arch);
-            Class<?> riscv64CPUFeature = Class.forName("jdk.vm.ci.riscv64.RISCV64$CPUFeature");
-            Method values = ReflectionUtil.lookupMethod(riscv64CPUFeature, "values");
-            Method initializeCPUFeatureAccessData = ReflectionUtil.lookupMethod(CPUFeatureAccessFeatureBase.class,
-                            "initializeCPUFeatureAccessData", Enum[].class, EnumSet.class, Class.class, FeatureImpl.BeforeAnalysisAccessImpl.class);
-            initializeCPUFeatureAccessData.invoke(this, values.invoke(null), buildtimeCPUFeatures, RISCV64LibCHelper.CPUFeatures.class, arg);
-        } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException e) {
-            e.printStackTrace();
-            throw GraalError.shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
-        }
+        Method getFeatures = ReflectionUtil.lookupMethod(Architecture.class, "getFeatures");
+        var buildtimeCPUFeatures = RISCV64ReflectionUtil.invokeMethod(getFeatures, targetDescription.arch);
+        Class<?> riscv64CPUFeature = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64$CPUFeature");
+        Method values = ReflectionUtil.lookupMethod(riscv64CPUFeature, "values");
+        Method initializeCPUFeatureAccessData = ReflectionUtil.lookupMethod(CPUFeatureAccessFeatureBase.class,
+                        "initializeCPUFeatureAccessData", Enum[].class, EnumSet.class, Class.class, FeatureImpl.BeforeAnalysisAccessImpl.class);
+        RISCV64ReflectionUtil.invokeMethod(initializeCPUFeatureAccessData, this, RISCV64ReflectionUtil.invokeMethod(values, null), buildtimeCPUFeatures, RISCV64LibCHelper.CPUFeatures.class, arg);
     }
 
     @Override

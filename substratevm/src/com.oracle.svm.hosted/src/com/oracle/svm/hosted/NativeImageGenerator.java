@@ -33,7 +33,6 @@ import static org.graalvm.compiler.replacements.StandardGraphBuilderPlugins.regi
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -70,11 +69,11 @@ import org.graalvm.compiler.bytecode.ResolvedJavaMethodBytecodeProvider;
 import org.graalvm.compiler.core.common.GraalOptions;
 import org.graalvm.compiler.core.common.spi.ForeignCallsProvider;
 import org.graalvm.compiler.core.common.spi.MetaAccessExtensionProvider;
+import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
 import org.graalvm.compiler.debug.DebugCloseable;
 import org.graalvm.compiler.debug.DebugContext;
 import org.graalvm.compiler.debug.DebugContext.Builder;
 import org.graalvm.compiler.debug.DebugDumpScope;
-import org.graalvm.compiler.debug.GraalError;
 import org.graalvm.compiler.debug.Indent;
 import org.graalvm.compiler.graph.Node;
 import org.graalvm.compiler.hotspot.GraalHotSpotVMConfig;
@@ -497,30 +496,26 @@ public class NativeImageGenerator {
             int deoptScratchSpace = 2 * 8; // Space for two 64-bit registers: r0 and v0.
             return new SubstrateTargetDescription(architecture, true, 16, 0, deoptScratchSpace, runtimeCheckedFeatures);
         } else if (includedIn(platform, Platform.RISCV64.class)) {
-            try {
-                Class<?> riscv64 = Class.forName("jdk.vm.ci.riscv64.RISCV64");
-                Class<?> riscv64CPUFeature = Class.forName("jdk.vm.ci.riscv64.RISCV64$CPUFeature");
-                Architecture architecture;
-                if (NativeImageOptions.NativeArchitecture.getValue()) {
-                    architecture = GraalAccess.getOriginalTarget().arch;
-                } else {
-                    Method noneOf = ReflectionUtil.lookupMethod(EnumSet.class, "noneOf", Class.class);
-                    EnumSet<?> features = (EnumSet<?>) noneOf.invoke(null, riscv64CPUFeature);
-                    Method parseCSVtoEnum = ReflectionUtil.lookupMethod(NativeImageGenerator.class, "parseCSVtoEnum", Class.class, List.class, Enum[].class);
-                    Method addAll = ReflectionUtil.lookupMethod(AbstractCollection.class, "addAll", Collection.class);
+            Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+            Class<?> riscv64CPUFeature = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64$CPUFeature");
+            Architecture architecture;
+            if (NativeImageOptions.NativeArchitecture.getValue()) {
+                architecture = GraalAccess.getOriginalTarget().arch;
+            } else {
+                Method noneOf = RISCV64ReflectionUtil.lookupMethod(EnumSet.class, "noneOf", Class.class);
+                EnumSet<?> features = (EnumSet<?>) RISCV64ReflectionUtil.invokeMethod(noneOf, null, riscv64CPUFeature);
+                Method parseCSVtoEnum = RISCV64ReflectionUtil.lookupMethod(NativeImageGenerator.class, "parseCSVtoEnum", Class.class, List.class, Enum[].class);
+                parseCSVtoEnum.setAccessible(true);
+                Method addAll = RISCV64ReflectionUtil.lookupMethod(AbstractCollection.class, "addAll", Collection.class);
 
-                    addAll.invoke(features, parseCSVtoEnum.invoke(null, riscv64CPUFeature, NativeImageOptions.CPUFeatures.getValue().values(), riscv64CPUFeature.getEnumConstants()));
+                RISCV64ReflectionUtil.invokeMethod(addAll, features, RISCV64ReflectionUtil.invokeMethod(parseCSVtoEnum, null, riscv64CPUFeature, NativeImageOptions.CPUFeatures.getValue().values(), riscv64CPUFeature.getEnumConstants()));
 
-                    architecture = (Architecture) riscv64.getConstructor(EnumSet.class, EnumSet.class).newInstance(features, RISCV64CPUFeatureAccess.enabledRISCV64Flags());
-                }
-                Method getFeatures = ReflectionUtil.lookupMethod(Architecture.class, "getFeatures");
-                EnumSet<?> runtimeCheckedFeatures = ((EnumSet<?>) getFeatures.invoke(architecture)).clone();
-                int deoptScratchSpace = 2 * 8;
-                return new SubstrateTargetDescription(architecture, true, 16, 0, deoptScratchSpace, runtimeCheckedFeatures);
-            } catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
-                e.printStackTrace();
-                throw GraalError.shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
+                architecture = (Architecture) ReflectionUtil.newInstance(ReflectionUtil.lookupConstructor(riscv64, EnumSet.class, EnumSet.class), features, RISCV64CPUFeatureAccess.enabledRISCV64Flags());
             }
+            Method getFeatures = RISCV64ReflectionUtil.lookupMethod(Architecture.class, "getFeatures");
+            EnumSet<?> runtimeCheckedFeatures = ((EnumSet<?>) RISCV64ReflectionUtil.invokeMethod(getFeatures, architecture)).clone();
+            int deoptScratchSpace = 2 * 8;
+            return new SubstrateTargetDescription(architecture, true, 16, 0, deoptScratchSpace, runtimeCheckedFeatures);
         } else {
             throw UserError.abort("Architecture specified by platform is not supported: %s", platform.getClass().getTypeName());
         }

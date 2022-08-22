@@ -328,6 +328,7 @@ public final class NativeLibraries {
                 hint = defaultBuiltInLibraries.stream().filter(hasStaticLibrary.negate()).collect(Collectors.joining(", ", "Missing libraries: ", libraryLocationHint));
             }
 
+            /* Probe for static JDK libraries in user-specified CLibraryPath directory */
             if (staticLibsDir == null) {
                 for (String clibPathComponent : OptionUtils.flatten(",", SubstrateOptions.CLibraryPath.getValue())) {
                     Path path = Paths.get(clibPathComponent);

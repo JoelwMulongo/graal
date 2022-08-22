@@ -49,21 +49,21 @@ public final class VaListNextArgNode extends FixedWithNextNode implements Lowera
     public static final NodeClass<VaListNextArgNode> TYPE = NodeClass.create(VaListNextArgNode.class);
 
     @Input protected ValueNode vaList;
-    private final int parameterOffset;
+    private final int parameterIndex;
 
-    public VaListNextArgNode(JavaKind kind, ValueNode vaList, int parameterOffset) {
+    public VaListNextArgNode(JavaKind kind, ValueNode vaList, int parameterIndex) {
         super(TYPE, StampFactory.forKind(kind));
         assert kind.isPrimitive() && kind != JavaKind.Void;
         this.vaList = vaList;
-        this.parameterOffset = parameterOffset;
+        this.parameterIndex = parameterIndex;
     }
 
     public ValueNode getVaList() {
         return vaList;
     }
 
-    public int getParameterOffset() {
-        return parameterOffset;
+    public int getParameterIndex() {
+        return parameterIndex;
     }
 
     @Override

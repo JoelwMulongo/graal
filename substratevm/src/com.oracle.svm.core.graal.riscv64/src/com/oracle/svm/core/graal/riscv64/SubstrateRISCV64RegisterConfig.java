@@ -29,6 +29,7 @@ import static com.oracle.svm.core.util.VMError.unimplemented;
 
 import java.util.ArrayList;
 
+import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
 import org.graalvm.nativeimage.Platform;
 
 import com.oracle.svm.core.ReservedRegisters;
@@ -38,7 +39,6 @@ import com.oracle.svm.core.graal.code.SubstrateCallingConventionKind;
 import com.oracle.svm.core.graal.code.SubstrateCallingConventionType;
 import com.oracle.svm.core.graal.meta.SubstrateRegisterConfig;
 import com.oracle.svm.core.util.VMError;
-import com.oracle.svm.util.ReflectionUtil;
 
 import jdk.vm.ci.code.CallingConvention;
 import jdk.vm.ci.code.CallingConvention.Type;
@@ -72,125 +72,115 @@ public class SubstrateRISCV64RegisterConfig implements SubstrateRegisterConfig {
         this.target = target;
         this.metaAccess = metaAccess;
 
-        try {
-            Class<?> riscv64 = Class.forName("jdk.vm.ci.riscv64.RISCV64");
+        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
 
-            Register x0 = (Register) ReflectionUtil.lookupField(riscv64, "x0").get(null);
-            Register x1 = (Register) ReflectionUtil.lookupField(riscv64, "x1").get(null);
-            Register x2 = (Register) ReflectionUtil.lookupField(riscv64, "x2").get(null);
-            Register x3 = (Register) ReflectionUtil.lookupField(riscv64, "x3").get(null);
-            Register x8 = (Register) ReflectionUtil.lookupField(riscv64, "x8").get(null);
-            Register x9 = (Register) ReflectionUtil.lookupField(riscv64, "x9").get(null);
-            Register x10 = (Register) ReflectionUtil.lookupField(riscv64, "x10").get(null);
-            Register x11 = (Register) ReflectionUtil.lookupField(riscv64, "x11").get(null);
-            Register x12 = (Register) ReflectionUtil.lookupField(riscv64, "x12").get(null);
-            Register x13 = (Register) ReflectionUtil.lookupField(riscv64, "x13").get(null);
-            Register x14 = (Register) ReflectionUtil.lookupField(riscv64, "x14").get(null);
-            Register x15 = (Register) ReflectionUtil.lookupField(riscv64, "x15").get(null);
-            Register x16 = (Register) ReflectionUtil.lookupField(riscv64, "x16").get(null);
-            Register x17 = (Register) ReflectionUtil.lookupField(riscv64, "x17").get(null);
-            Register x18 = (Register) ReflectionUtil.lookupField(riscv64, "x18").get(null);
-            Register x19 = (Register) ReflectionUtil.lookupField(riscv64, "x19").get(null);
-            Register x20 = (Register) ReflectionUtil.lookupField(riscv64, "x20").get(null);
-            Register x21 = (Register) ReflectionUtil.lookupField(riscv64, "x21").get(null);
-            Register x22 = (Register) ReflectionUtil.lookupField(riscv64, "x22").get(null);
-            Register x23 = (Register) ReflectionUtil.lookupField(riscv64, "x23").get(null);
-            Register x24 = (Register) ReflectionUtil.lookupField(riscv64, "x24").get(null);
-            Register x25 = (Register) ReflectionUtil.lookupField(riscv64, "x25").get(null);
-            Register x26 = (Register) ReflectionUtil.lookupField(riscv64, "x26").get(null);
-            Register x27 = (Register) ReflectionUtil.lookupField(riscv64, "x27").get(null);
+        Register x0 = RISCV64ReflectionUtil.readStaticField(riscv64, "x0");
+        Register x1 = RISCV64ReflectionUtil.readStaticField(riscv64, "x1");
+        Register x2 = RISCV64ReflectionUtil.readStaticField(riscv64, "x2");
+        Register x3 = RISCV64ReflectionUtil.readStaticField(riscv64, "x3");
+        Register x8 = RISCV64ReflectionUtil.readStaticField(riscv64, "x8");
+        Register x9 = RISCV64ReflectionUtil.readStaticField(riscv64, "x9");
+        Register x10 = RISCV64ReflectionUtil.readStaticField(riscv64, "x10");
+        Register x11 = RISCV64ReflectionUtil.readStaticField(riscv64, "x11");
+        Register x12 = RISCV64ReflectionUtil.readStaticField(riscv64, "x12");
+        Register x13 = RISCV64ReflectionUtil.readStaticField(riscv64, "x13");
+        Register x14 = RISCV64ReflectionUtil.readStaticField(riscv64, "x14");
+        Register x15 = RISCV64ReflectionUtil.readStaticField(riscv64, "x15");
+        Register x16 = RISCV64ReflectionUtil.readStaticField(riscv64, "x16");
+        Register x17 = RISCV64ReflectionUtil.readStaticField(riscv64, "x17");
+        Register x18 = RISCV64ReflectionUtil.readStaticField(riscv64, "x18");
+        Register x19 = RISCV64ReflectionUtil.readStaticField(riscv64, "x19");
+        Register x20 = RISCV64ReflectionUtil.readStaticField(riscv64, "x20");
+        Register x21 = RISCV64ReflectionUtil.readStaticField(riscv64, "x21");
+        Register x22 = RISCV64ReflectionUtil.readStaticField(riscv64, "x22");
+        Register x23 = RISCV64ReflectionUtil.readStaticField(riscv64, "x23");
+        Register x24 = RISCV64ReflectionUtil.readStaticField(riscv64, "x24");
+        Register x25 = RISCV64ReflectionUtil.readStaticField(riscv64, "x25");
+        Register x26 = RISCV64ReflectionUtil.readStaticField(riscv64, "x26");
+        Register x27 = RISCV64ReflectionUtil.readStaticField(riscv64, "x27");
 
-            Register f8 = (Register) ReflectionUtil.lookupField(riscv64, "f8").get(null);
-            Register f9 = (Register) ReflectionUtil.lookupField(riscv64, "f9").get(null);
-            Register f10 = (Register) ReflectionUtil.lookupField(riscv64, "f10").get(null);
-            Register f11 = (Register) ReflectionUtil.lookupField(riscv64, "f11").get(null);
-            Register f12 = (Register) ReflectionUtil.lookupField(riscv64, "f12").get(null);
-            Register f13 = (Register) ReflectionUtil.lookupField(riscv64, "f13").get(null);
-            Register f14 = (Register) ReflectionUtil.lookupField(riscv64, "f14").get(null);
-            Register f15 = (Register) ReflectionUtil.lookupField(riscv64, "f15").get(null);
-            Register f16 = (Register) ReflectionUtil.lookupField(riscv64, "f16").get(null);
-            Register f17 = (Register) ReflectionUtil.lookupField(riscv64, "f17").get(null);
-            Register f18 = (Register) ReflectionUtil.lookupField(riscv64, "f18").get(null);
-            Register f19 = (Register) ReflectionUtil.lookupField(riscv64, "f19").get(null);
-            Register f20 = (Register) ReflectionUtil.lookupField(riscv64, "f20").get(null);
-            Register f21 = (Register) ReflectionUtil.lookupField(riscv64, "f21").get(null);
-            Register f22 = (Register) ReflectionUtil.lookupField(riscv64, "f22").get(null);
-            Register f23 = (Register) ReflectionUtil.lookupField(riscv64, "f23").get(null);
-            Register f24 = (Register) ReflectionUtil.lookupField(riscv64, "f24").get(null);
-            Register f25 = (Register) ReflectionUtil.lookupField(riscv64, "f25").get(null);
-            Register f26 = (Register) ReflectionUtil.lookupField(riscv64, "f26").get(null);
-            Register f27 = (Register) ReflectionUtil.lookupField(riscv64, "f27").get(null);
+        Register f8 = RISCV64ReflectionUtil.readStaticField(riscv64, "f8");
+        Register f9 = RISCV64ReflectionUtil.readStaticField(riscv64, "f9");
+        Register f10 = RISCV64ReflectionUtil.readStaticField(riscv64, "f10");
+        Register f11 = RISCV64ReflectionUtil.readStaticField(riscv64, "f11");
+        Register f12 = RISCV64ReflectionUtil.readStaticField(riscv64, "f12");
+        Register f13 = RISCV64ReflectionUtil.readStaticField(riscv64, "f13");
+        Register f14 = RISCV64ReflectionUtil.readStaticField(riscv64, "f14");
+        Register f15 = RISCV64ReflectionUtil.readStaticField(riscv64, "f15");
+        Register f16 = RISCV64ReflectionUtil.readStaticField(riscv64, "f16");
+        Register f17 = RISCV64ReflectionUtil.readStaticField(riscv64, "f17");
+        Register f18 = RISCV64ReflectionUtil.readStaticField(riscv64, "f18");
+        Register f19 = RISCV64ReflectionUtil.readStaticField(riscv64, "f19");
+        Register f20 = RISCV64ReflectionUtil.readStaticField(riscv64, "f20");
+        Register f21 = RISCV64ReflectionUtil.readStaticField(riscv64, "f21");
+        Register f22 = RISCV64ReflectionUtil.readStaticField(riscv64, "f22");
+        Register f23 = RISCV64ReflectionUtil.readStaticField(riscv64, "f23");
+        Register f24 = RISCV64ReflectionUtil.readStaticField(riscv64, "f24");
+        Register f25 = RISCV64ReflectionUtil.readStaticField(riscv64, "f25");
+        Register f26 = RISCV64ReflectionUtil.readStaticField(riscv64, "f26");
+        Register f27 = RISCV64ReflectionUtil.readStaticField(riscv64, "f27");
 
-            RegisterArray allRegisters = (RegisterArray) ReflectionUtil.lookupField(riscv64, "allRegisters").get(null);
+        RegisterArray allRegisters = RISCV64ReflectionUtil.readStaticField(riscv64, "allRegisters");
 
-            generalParameterRegs = new RegisterArray(x10, x11, x12, x13, x14, x15, x16, x17);
-            fpParameterRegs = new RegisterArray(f10, f11, f12, f13, f14, f15, f16, f17);
+        generalParameterRegs = new RegisterArray(x10, x11, x12, x13, x14, x15, x16, x17);
+        fpParameterRegs = new RegisterArray(f10, f11, f12, f13, f14, f15, f16, f17);
 
-            nativeParamsStackOffset = 0;
+        nativeParamsStackOffset = 0;
 
-            ArrayList<Register> regs = new ArrayList<>(allRegisters.asList());
-            regs.remove(x2); // sp
-            regs.remove(x0); // zero
+        ArrayList<Register> regs = new ArrayList<>(allRegisters.asList());
+        regs.remove(x2); // sp
+        regs.remove(x0); // zero
 
-            if (preserveFramePointer) {
-                regs.remove(x8);
-            }
-            /*
-             * If enabled, the heapBaseRegister and threadRegister are x27 and x4, respectively. See
-             * RISCV64ReservedRegisters and ReservedRegisters for more information.
-             */
-            regs.remove(ReservedRegisters.singleton().getHeapBaseRegister());
-            regs.remove(ReservedRegisters.singleton().getThreadRegister());
-            regs.remove(x1); // ra
-            regs.remove(x3); // gp
-            allocatableRegs = new RegisterArray(regs);
-
-            switch (config) {
-                case NORMAL:
-                    calleeSaveRegisters = new RegisterArray();
-                    break;
-
-                case NATIVE_TO_JAVA:
-                    calleeSaveRegisters = new RegisterArray(x2, x8, x9, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27,
-                                    f8, f9, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27);
-                    break;
-
-                default:
-                    throw shouldNotReachHere();
-
-            }
-
-            attributesMap = RegisterAttributes.createMap(this, allRegisters);
-        } catch (ClassNotFoundException | IllegalAccessException e) {
-            e.printStackTrace();
-            throw shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
+        if (preserveFramePointer) {
+            regs.remove(x8);
         }
+        /*
+         * If enabled, the heapBaseRegister and threadRegister are x27 and x4, respectively. See
+         * RISCV64ReservedRegisters and ReservedRegisters for more information.
+         */
+        regs.remove(ReservedRegisters.singleton().getHeapBaseRegister());
+        regs.remove(ReservedRegisters.singleton().getThreadRegister());
+        regs.remove(x1); // ra
+        regs.remove(x3); // gp
+        allocatableRegs = new RegisterArray(regs);
+
+        switch (config) {
+            case NORMAL:
+                calleeSaveRegisters = new RegisterArray();
+                break;
+
+            case NATIVE_TO_JAVA:
+                calleeSaveRegisters = new RegisterArray(x2, x8, x9, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27,
+                                f8, f9, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27);
+                break;
+
+            default:
+                throw shouldNotReachHere();
+
+        }
+
+        attributesMap = RegisterAttributes.createMap(this, allRegisters);
     }
 
     @Override
     public Register getReturnRegister(JavaKind kind) {
-        try {
-            Class<?> riscv64 = Class.forName("jdk.vm.ci.riscv64.RISCV64");
-            switch (kind) {
-                case Boolean:
-                case Byte:
-                case Char:
-                case Short:
-                case Int:
-                case Long:
-                case Object:
-                    return (Register) ReflectionUtil.lookupField(riscv64, "x10").get(null);
-                case Float:
-                case Double:
-                    return (Register) ReflectionUtil.lookupField(riscv64, "f10").get(null);
-                case Void:
-                    return null;
-                default:
-                    throw VMError.shouldNotReachHere();
-            }
-        } catch (ClassNotFoundException | IllegalAccessException e) {
-            e.printStackTrace();
-            throw shouldNotReachHere("Running Native Image for RISC-V requires a JDK with JVMCI for RISC-V");
+        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+        switch (kind) {
+            case Boolean:
+            case Byte:
+            case Char:
+            case Short:
+            case Int:
+            case Long:
+            case Object:
+                return RISCV64ReflectionUtil.readStaticField(riscv64, "x10");
+            case Float:
+            case Double:
+                return RISCV64ReflectionUtil.readStaticField(riscv64, "f10");
+            case Void:
+                return null;
+            default:
+                throw VMError.shouldNotReachHere();
         }
     }
 
