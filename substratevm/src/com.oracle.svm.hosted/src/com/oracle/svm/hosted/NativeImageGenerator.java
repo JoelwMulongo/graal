@@ -508,9 +508,11 @@ public class NativeImageGenerator {
                 parseCSVtoEnum.setAccessible(true);
                 Method addAll = RISCV64ReflectionUtil.lookupMethod(AbstractCollection.class, "addAll", Collection.class);
 
-                RISCV64ReflectionUtil.invokeMethod(addAll, features, RISCV64ReflectionUtil.invokeMethod(parseCSVtoEnum, null, riscv64CPUFeature, NativeImageOptions.CPUFeatures.getValue().values(), riscv64CPUFeature.getEnumConstants()));
+                RISCV64ReflectionUtil.invokeMethod(addAll, features,
+                                RISCV64ReflectionUtil.invokeMethod(parseCSVtoEnum, null, riscv64CPUFeature, NativeImageOptions.CPUFeatures.getValue().values(), riscv64CPUFeature.getEnumConstants()));
 
-                architecture = (Architecture) ReflectionUtil.newInstance(ReflectionUtil.lookupConstructor(riscv64, EnumSet.class, EnumSet.class), features, RISCV64CPUFeatureAccess.enabledRISCV64Flags());
+                architecture = (Architecture) ReflectionUtil.newInstance(ReflectionUtil.lookupConstructor(riscv64, EnumSet.class, EnumSet.class), features,
+                                RISCV64CPUFeatureAccess.enabledRISCV64Flags());
             }
             Method getFeatures = RISCV64ReflectionUtil.lookupMethod(Architecture.class, "getFeatures");
             EnumSet<?> runtimeCheckedFeatures = ((EnumSet<?>) RISCV64ReflectionUtil.invokeMethod(getFeatures, architecture)).clone();
