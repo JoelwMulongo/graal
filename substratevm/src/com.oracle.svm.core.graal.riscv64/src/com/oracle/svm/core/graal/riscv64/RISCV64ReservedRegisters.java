@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,7 @@ public final class RISCV64ReservedRegisters extends ReservedRegisters {
     public static Register stackBaseRegisterCandidate;
 
     static {
-        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(true, "jdk.vm.ci.riscv64.RISCV64");
+        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(true);
         if (riscv64 != null) {
             stackBaseRegisterCandidate = RISCV64ReflectionUtil.readStaticField(riscv64, "x2");
             threadRegisterCandidate = RISCV64ReflectionUtil.readStaticField(riscv64, "x23");

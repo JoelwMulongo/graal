@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -72,7 +72,7 @@ public class SubstrateRISCV64RegisterConfig implements SubstrateRegisterConfig {
         this.target = target;
         this.metaAccess = metaAccess;
 
-        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
 
         Register x0 = RISCV64ReflectionUtil.readStaticField(riscv64, "x0");
         Register x1 = RISCV64ReflectionUtil.readStaticField(riscv64, "x1");
@@ -164,7 +164,7 @@ public class SubstrateRISCV64RegisterConfig implements SubstrateRegisterConfig {
 
     @Override
     public Register getReturnRegister(JavaKind kind) {
-        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
         switch (kind) {
             case Boolean:
             case Byte:

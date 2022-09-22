@@ -38,11 +38,27 @@ public enum ELFMachine/* implements Integral */ {
         Class<? extends Enum<? extends RelocationMethod>> relocationTypes() {
             return ELFX86_64Relocation.class;
         }
+
+        @Override
+        int flags() {
+            /*
+             * e_flags are always 0 for X86
+             */
+            return NO_FLAGS;
+        }
     },
     AArch64 {
         @Override
         Class<? extends Enum<? extends RelocationMethod>> relocationTypes() {
             return ELFAArch64Relocation.class;
+        }
+
+        @Override
+        int flags() {
+            /*
+             * e_flags are always 0 for AArch64
+             */
+            return NO_FLAGS;
         }
     },
     RISCV64 {
@@ -50,12 +66,23 @@ public enum ELFMachine/* implements Integral */ {
         Class<? extends Enum<? extends RelocationMethod>> relocationTypes() {
             return ELFRISCV64Relocation.class;
         }
+
+        @Override
+        int flags() {
+            /*
+             * Since we use the most powerful rv64gc model variant, we need to set e_flags to 5,
+             * which are RVC and double-float ABI.
+             */
+            return RVC_DOUBLE_FLOAT_ABI;
+        }
     };
 
     private static final int NO_FLAGS = 0;
     private static final int RVC_DOUBLE_FLOAT_ABI = 5;
 
     abstract Class<? extends Enum<? extends RelocationMethod>> relocationTypes();
+
+    abstract int flags();
 
     public static ELFMachine from(String s) {
         switch (s.toLowerCase()) {
@@ -186,28 +213,6 @@ public enum ELFMachine/* implements Integral */ {
             return RISCV64;
         } else {
             return X86_64;
-        }
-    }
-
-    public int flags() {
-        if (this == AArch64) {
-            /*
-             * e_flags are always 0 for AArch64
-             */
-            return NO_FLAGS;
-        } else if (this == X86_64) {
-            /*
-             * e_flags are always 0 for X86
-             */
-            return NO_FLAGS;
-        } else if (this == RISCV64) {
-            /*
-             * Since we use the most powerful rv64gc model variant, we need to set e_flags to 5,
-             * which are RVC and double-float ABI.
-             */
-            return RVC_DOUBLE_FLOAT_ABI;
-        } else {
-            throw new IllegalStateException("should not reach here");
         }
     }
 }

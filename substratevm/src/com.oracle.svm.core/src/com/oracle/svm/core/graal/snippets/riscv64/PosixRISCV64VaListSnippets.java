@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -69,8 +69,7 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
 
     @Snippet
     protected static double vaArgDoubleSnippet(Pointer vaList, int offset) {
-        double v = vaList.readDouble(offset);
-        return v;
+        return vaList.readDouble(offset);
     }
 
     @Snippet
@@ -81,8 +80,7 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
 
     @Snippet
     protected static long vaArgLongSnippet(Pointer vaList, int offset) {
-        long v = vaList.readLong(offset);
-        return v;
+        return vaList.readLong(offset);
     }
 
     @Snippet

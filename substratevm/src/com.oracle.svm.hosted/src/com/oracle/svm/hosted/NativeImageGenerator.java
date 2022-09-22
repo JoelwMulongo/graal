@@ -496,8 +496,8 @@ public class NativeImageGenerator {
             int deoptScratchSpace = 2 * 8; // Space for two 64-bit registers: r0 and v0.
             return new SubstrateTargetDescription(architecture, true, 16, 0, deoptScratchSpace, runtimeCheckedFeatures);
         } else if (includedIn(platform, Platform.RISCV64.class)) {
-            Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
-            Class<?> riscv64CPUFeature = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64$CPUFeature");
+            Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
+            Class<?> riscv64CPUFeature = RISCV64ReflectionUtil.lookupClass(false, RISCV64ReflectionUtil.featureClass);
             Architecture architecture;
             if (NativeImageOptions.NativeArchitecture.getValue()) {
                 architecture = GraalAccess.getOriginalTarget().arch;

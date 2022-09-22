@@ -367,7 +367,7 @@ public final class RuntimeCPUFeatureCheckImpl {
         } else if (arch instanceof AArch64) {
             return ((AArch64) arch).getFeatures();
         } else if (arch.getName().equals("riscv64")) {
-            Method getFeatures = RISCV64ReflectionUtil.lookupMethod(RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64"), "getFeatures");
+            Method getFeatures = RISCV64ReflectionUtil.lookupMethod(RISCV64ReflectionUtil.getArch(false), "getFeatures");
             getFeatures.setAccessible(true);
             return (EnumSet<?>) RISCV64ReflectionUtil.invokeMethod(getFeatures, arch);
         } else {

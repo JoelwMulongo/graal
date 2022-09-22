@@ -50,7 +50,7 @@ class RISCV64CPUFeatureAccessFeature extends CPUFeatureAccessFeatureBase impleme
         var targetDescription = ImageSingletons.lookup(SubstrateTargetDescription.class);
         Method getFeatures = ReflectionUtil.lookupMethod(Architecture.class, "getFeatures");
         var buildtimeCPUFeatures = RISCV64ReflectionUtil.invokeMethod(getFeatures, targetDescription.arch);
-        Class<?> riscv64CPUFeature = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64$CPUFeature");
+        Class<?> riscv64CPUFeature = RISCV64ReflectionUtil.lookupClass(false, RISCV64ReflectionUtil.featureClass);
         Method values = ReflectionUtil.lookupMethod(riscv64CPUFeature, "values");
         Method initializeCPUFeatureAccessData = ReflectionUtil.lookupMethod(CPUFeatureAccessFeatureBase.class,
                         "initializeCPUFeatureAccessData", Enum[].class, EnumSet.class, Class.class, FeatureImpl.BeforeAnalysisAccessImpl.class);

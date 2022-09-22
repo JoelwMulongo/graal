@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -56,7 +56,7 @@ public class RISCV64CPUFeatureAccess extends CPUFeatureAccessImpl {
      */
     @Platforms(Platform.HOSTED_ONLY.class)
     public static EnumSet<?> enabledRISCV64Flags() {
-        Class<?> riscv64Flag = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64$Flag");
+        Class<?> riscv64Flag = RISCV64ReflectionUtil.lookupClass(false, RISCV64ReflectionUtil.flagClass);
         Method of = RISCV64ReflectionUtil.lookupMethod(EnumSet.class, "of", Enum.class, Enum.class);
         return (EnumSet<?>) RISCV64ReflectionUtil.invokeMethod(of, null, RISCV64ReflectionUtil.readStaticField(riscv64Flag, "UseConservativeFence"),
                         RISCV64ReflectionUtil.readStaticField(riscv64Flag, "AvoidUnalignedAccesses"));
@@ -65,7 +65,7 @@ public class RISCV64CPUFeatureAccess extends CPUFeatureAccessImpl {
     @Override
     @Platforms(Platform.RISCV64.class)
     public EnumSet<?> determineHostCPUFeatures() {
-        Class<?> riscv64CPUFeature = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64$CPUFeature");
+        Class<?> riscv64CPUFeature = RISCV64ReflectionUtil.lookupClass(false, RISCV64ReflectionUtil.featureClass);
         Method noneOf = RISCV64ReflectionUtil.lookupMethod(EnumSet.class, "noneOf", Class.class);
         EnumSet<?> features = (EnumSet<?>) RISCV64ReflectionUtil.invokeMethod(noneOf, null, riscv64CPUFeature);
 

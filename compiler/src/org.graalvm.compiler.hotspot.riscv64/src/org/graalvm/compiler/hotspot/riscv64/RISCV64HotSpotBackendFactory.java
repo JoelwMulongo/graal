@@ -76,7 +76,7 @@ public class RISCV64HotSpotBackendFactory extends HotSpotBackendFactory {
 
     @Override
     public Class<? extends Architecture> getArchitecture() {
-        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(true, "jdk.vm.ci.riscv64.RISCV64");
+        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(true);
         if (riscv64 != null) {
             return riscv64.asSubclass(Architecture.class);
         } else {
@@ -119,8 +119,8 @@ public class RISCV64HotSpotBackendFactory extends HotSpotBackendFactory {
 
     @Override
     protected HotSpotRegistersProvider createRegisters() {
-        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
-        Class<?> riscv64HotSpotRegisterConfig = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.hotspot.riscv64.RISCV64HotSpotRegisterConfig");
+        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
+        Class<?> riscv64HotSpotRegisterConfig = RISCV64ReflectionUtil.lookupClass(false, RISCV64ReflectionUtil.hotSpotClass);
         Register tp = RISCV64ReflectionUtil.readStaticField(riscv64HotSpotRegisterConfig, "tp");
         Register x27 = RISCV64ReflectionUtil.readStaticField(riscv64, "x27");
         Register sp = RISCV64ReflectionUtil.readStaticField(riscv64HotSpotRegisterConfig, "sp");
@@ -152,7 +152,7 @@ public class RISCV64HotSpotBackendFactory extends HotSpotBackendFactory {
     protected Value[] createNativeABICallerSaveRegisters(@SuppressWarnings("unused") GraalHotSpotVMConfig config, RegisterConfig regConfig) {
         List<Register> callerSave = new ArrayList<>(regConfig.getAllocatableRegisters().asList());
         // Removing callee-saved registers.
-        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
         /* General Purpose Registers. */
         callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x2"));
         callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x8"));

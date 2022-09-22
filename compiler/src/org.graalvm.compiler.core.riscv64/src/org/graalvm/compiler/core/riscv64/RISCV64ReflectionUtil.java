@@ -33,6 +33,11 @@ import java.lang.reflect.Method;
  * RISC-V, which causes unwanted build errors.
  */
 public class RISCV64ReflectionUtil {
+    public static final String archClass = "jdk.vm.ci.riscv64.RISCV64";
+    public static final String featureClass = archClass + "$CPUFeature";
+    public static final String flagClass = archClass + "$Flag";
+    public static final String hotSpotClass = archClass + "HotSpotRegisterConfig";
+
     public static Class<?> lookupClass(boolean optional, String className) {
         try {
             return Class.forName(className);
@@ -42,6 +47,10 @@ public class RISCV64ReflectionUtil {
             }
             throw new ReflectionUtilError(ex);
         }
+    }
+
+    public static Class<?> getArch(boolean optional) {
+        return lookupClass(optional, archClass);
     }
 
     @SuppressWarnings("unchecked")

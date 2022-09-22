@@ -65,7 +65,7 @@ public class RISCV64HotSpotForeignCallsProvider extends HotSpotHostForeignCallsP
 
         // The calling convention for the exception handler stub is (only?) defined in
         // TemplateInterpreterGenerator::generate_throw_exception()
-        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
 
         RegisterValue exception = ((Register) RISCV64ReflectionUtil.readStaticField(riscv64, "x5")).asValue(LIRKind.reference(word));
         RegisterValue exceptionPc = ((Register) RISCV64ReflectionUtil.readStaticField(riscv64, "x7")).asValue(LIRKind.value(word));

@@ -25,7 +25,6 @@
 package com.oracle.svm.core.riscv64;
 
 import org.graalvm.compiler.api.replacements.Fold;
-import org.graalvm.nativeimage.ImageSingletons;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
 import org.graalvm.nativeimage.c.function.CodePointer;
@@ -33,26 +32,15 @@ import org.graalvm.word.Pointer;
 
 import com.oracle.svm.core.FrameAccess;
 import com.oracle.svm.core.Uninterruptible;
-import com.oracle.svm.core.feature.AutomaticallyRegisteredFeature;
-import com.oracle.svm.core.feature.InternalFeature;
+import com.oracle.svm.core.feature.AutomaticallyRegisteredImageSingleton;
 
-@AutomaticallyRegisteredFeature
+@AutomaticallyRegisteredImageSingleton(FrameAccess.class)
 @Platforms(Platform.RISCV64.class)
-class RISCV64FrameAccessFeature implements InternalFeature {
-    @Override
-    public void afterRegistration(AfterRegistrationAccess access) {
-        ImageSingletons.add(FrameAccess.class, new RISCV64FrameAccess());
-    }
-}
-
 public class RISCV64FrameAccess extends FrameAccess {
     @Override
     @Uninterruptible(reason = "Called from uninterruptible code.", mayBeInlined = true)
     public CodePointer readReturnAddress(Pointer sourceSp) {
-        /*
-         * Read the return address, which is stored immediately below the stack pointer, after an
-         * empty space of 2 words
-         */
+        /* Read the return address, which is stored immediately below the stack pointer */
         return sourceSp.readWord(-returnAddressSize());
     }
 

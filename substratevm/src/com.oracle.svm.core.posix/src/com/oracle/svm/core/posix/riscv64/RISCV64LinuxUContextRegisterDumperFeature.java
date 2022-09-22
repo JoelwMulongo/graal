@@ -48,7 +48,7 @@ import com.oracle.svm.core.util.VMError;
 class RISCV64LinuxUContextRegisterDumperFeature implements InternalFeature {
     @Override
     public void afterRegistration(AfterRegistrationAccess access) {
-        Class<?> riscv64 = RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
         VMError.guarantee(RISCV64ReflectionUtil.readStaticField(riscv64, "x27").equals(RISCV64ReservedRegisters.heapBaseRegisterCandidate));
         VMError.guarantee(RISCV64ReflectionUtil.readStaticField(riscv64, "x23").equals(RISCV64ReservedRegisters.threadRegisterCandidate));
         ImageSingletons.add(RegisterDumper.class, new RISCV64LinuxUContextRegisterDumper());

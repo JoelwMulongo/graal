@@ -440,7 +440,7 @@ public abstract class CCompilerInvoker {
             case "arm64": /* Darwin notation */
                 return AArch64.class;
             case "riscv64":
-                return (Class<? extends Architecture>) RISCV64ReflectionUtil.lookupClass(false, "jdk.vm.ci.riscv64.RISCV64");
+                return (Class<? extends Architecture>) RISCV64ReflectionUtil.getArch(false);
             case "i686":
             case "80x86": /* Windows notation */
             case "x86":
