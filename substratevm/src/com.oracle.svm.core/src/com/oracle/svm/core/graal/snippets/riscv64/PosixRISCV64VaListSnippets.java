@@ -37,9 +37,12 @@ import org.graalvm.compiler.replacements.SnippetTemplate.SnippetInfo;
 import org.graalvm.compiler.replacements.Snippets;
 import org.graalvm.word.Pointer;
 
+import com.oracle.svm.core.FrameAccess;
 import com.oracle.svm.core.graal.nodes.VaListNextArgNode;
 import com.oracle.svm.core.graal.snippets.NodeLoweringProvider;
 import com.oracle.svm.core.graal.snippets.SubstrateTemplates;
+import com.oracle.svm.core.graal.snippets.VaListInitializationSnippets;
+import com.oracle.svm.core.graal.stackvalue.LoweredStackValueNode;
 import com.oracle.svm.core.util.VMError;
 
 /**
@@ -68,24 +71,30 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
     }
 
     @Snippet
-    protected static double vaArgDoubleSnippet(Pointer vaList, int offset) {
-        return vaList.readDouble(offset);
+    protected static double vaArgDoubleSnippet() {
+        Pointer vaListPointer = (Pointer) LoweredStackValueNode.loweredStackValue(FrameAccess.wordSize(), FrameAccess.wordSize(), VaListInitializationSnippets.vaListIdentity);
+        Pointer vaList = vaListPointer.readWord(0);
+        vaListPointer.writeWord(0, vaList.add(8));
+        return vaList.readDouble(0);
     }
 
     @Snippet
-    protected static float vaArgFloatSnippet(Pointer vaList, int offset) {
+    protected static float vaArgFloatSnippet() {
         // float is always promoted to double when passed in varargs
-        return (float) vaArgDoubleSnippet(vaList, offset);
+        return (float) vaArgDoubleSnippet();
     }
 
     @Snippet
-    protected static long vaArgLongSnippet(Pointer vaList, int offset) {
-        return vaList.readLong(offset);
+    protected static long vaArgLongSnippet() {
+        Pointer vaListPointer = (Pointer) LoweredStackValueNode.loweredStackValue(FrameAccess.wordSize(), FrameAccess.wordSize(), VaListInitializationSnippets.vaListIdentity);
+        Pointer vaList = vaListPointer.readWord(0);
+        vaListPointer.writeWord(0, vaList.add(8));
+        return vaList.readLong(0);
     }
 
     @Snippet
-    protected static int vaArgIntSnippet(Pointer vaList, int offset) {
-        return (int) vaArgLongSnippet(vaList, offset);
+    protected static int vaArgIntSnippet() {
+        return (int) vaArgLongSnippet();
     }
 
     @SuppressWarnings("unused")
@@ -127,8 +136,6 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
                     throw VMError.shouldNotReachHere();
             }
             Arguments args = new Arguments(snippet, node.graph().getGuardsStage(), tool.getLoweringStage());
-            args.add("vaList", node.getVaList());
-            args.add("offset", node.getParameterIndex() * 8);
             template(node, args).instantiate(providers.getMetaAccess(), node, SnippetTemplate.DEFAULT_REPLACER, args);
         }
     }

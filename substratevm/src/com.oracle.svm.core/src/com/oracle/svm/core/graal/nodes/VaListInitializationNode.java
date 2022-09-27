@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,9 +29,11 @@ import static org.graalvm.compiler.nodeinfo.NodeCycles.CYCLES_8;
 import static org.graalvm.compiler.nodeinfo.NodeSize.SIZE_8;
 
 import org.graalvm.compiler.core.common.type.StampFactory;
+import org.graalvm.compiler.graph.Node;
 import org.graalvm.compiler.graph.NodeClass;
 import org.graalvm.compiler.nodeinfo.NodeInfo;
 import org.graalvm.compiler.nodes.FixedWithNextNode;
+import org.graalvm.compiler.nodes.ValueNode;
 import org.graalvm.compiler.nodes.memory.SingleMemoryKill;
 import org.graalvm.compiler.nodes.spi.Lowerable;
 import org.graalvm.compiler.nodes.spi.LoweringTool;
@@ -40,16 +42,22 @@ import org.graalvm.word.LocationIdentity;
 import jdk.vm.ci.meta.JavaKind;
 
 /**
- * Retrieves an argument of a specific kind from a C {@code va_list} structure, modifying the
- * structure so that the argument is consumed.
+ * Puts the VaList in a StackValue, used as a layer to access and modify it.
  */
 @NodeInfo(size = SIZE_8, cycles = CYCLES_8, allowedUsageTypes = {Memory})
-public final class VaListNextArgNode extends FixedWithNextNode implements Lowerable, SingleMemoryKill {
-    public static final NodeClass<VaListNextArgNode> TYPE = NodeClass.create(VaListNextArgNode.class);
+public class VaListInitializationNode extends FixedWithNextNode implements SingleMemoryKill, Lowerable {
+    public static final NodeClass<VaListInitializationNode> TYPE = NodeClass.create(VaListInitializationNode.class);
 
-    public VaListNextArgNode(JavaKind kind) {
-        super(TYPE, StampFactory.forKind(kind));
-        assert kind.isPrimitive() && kind != JavaKind.Void;
+    @Node.Input
+    protected ValueNode vaList;
+
+    public VaListInitializationNode(ValueNode vaList) {
+        super(TYPE, StampFactory.forKind(JavaKind.Object));
+        this.vaList = vaList;
+    }
+
+    public ValueNode getVaList() {
+        return vaList;
     }
 
     @Override

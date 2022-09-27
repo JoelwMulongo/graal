@@ -37,9 +37,12 @@ import org.graalvm.compiler.replacements.SnippetTemplate.SnippetInfo;
 import org.graalvm.compiler.replacements.Snippets;
 import org.graalvm.word.Pointer;
 
+import com.oracle.svm.core.FrameAccess;
 import com.oracle.svm.core.graal.nodes.VaListNextArgNode;
 import com.oracle.svm.core.graal.snippets.NodeLoweringProvider;
 import com.oracle.svm.core.graal.snippets.SubstrateTemplates;
+import com.oracle.svm.core.graal.snippets.VaListInitializationSnippets;
+import com.oracle.svm.core.graal.stackvalue.LoweredStackValueNode;
 import com.oracle.svm.core.util.VMError;
 
 /**
@@ -103,7 +106,9 @@ final class PosixAMD64VaListSnippets extends SubstrateTemplates implements Snipp
     private static final int REG_SAVE_AREA_LOCATION = 16;
 
     @Snippet(allowMissingProbabilities = true)
-    protected static double vaArgDoubleSnippet(Pointer vaList) {
+    protected static double vaArgDoubleSnippet() {
+        Pointer vaListPointer = (Pointer) LoweredStackValueNode.loweredStackValue(FrameAccess.wordSize(), FrameAccess.wordSize(), VaListInitializationSnippets.vaListIdentity);
+        Pointer vaList = vaListPointer.readWord(0);
         int fpOffset = vaList.readInt(FP_OFFSET_LOCATION);
         if (fpOffset < MAX_FP_OFFSET) {
             Pointer regSaveArea = vaList.readWord(REG_SAVE_AREA_LOCATION);
@@ -119,13 +124,15 @@ final class PosixAMD64VaListSnippets extends SubstrateTemplates implements Snipp
     }
 
     @Snippet
-    protected static float vaArgFloatSnippet(Pointer vaList) {
+    protected static float vaArgFloatSnippet() {
         // float is always promoted to double when passed in varargs
-        return (float) vaArgDoubleSnippet(vaList);
+        return (float) vaArgDoubleSnippet();
     }
 
     @Snippet(allowMissingProbabilities = true)
-    protected static long vaArgLongSnippet(Pointer vaList) {
+    protected static long vaArgLongSnippet() {
+        Pointer vaListPointer = (Pointer) LoweredStackValueNode.loweredStackValue(FrameAccess.wordSize(), FrameAccess.wordSize(), VaListInitializationSnippets.vaListIdentity);
+        Pointer vaList = vaListPointer.readWord(0);
         int gpOffset = vaList.readInt(GP_OFFSET_LOCATION);
         if (gpOffset < MAX_GP_OFFSET) {
             Pointer regSaveArea = vaList.readWord(REG_SAVE_AREA_LOCATION);
@@ -141,8 +148,8 @@ final class PosixAMD64VaListSnippets extends SubstrateTemplates implements Snipp
     }
 
     @Snippet
-    protected static int vaArgIntSnippet(Pointer vaList) {
-        return (int) vaArgLongSnippet(vaList);
+    protected static int vaArgIntSnippet() {
+        return (int) vaArgLongSnippet();
     }
 
     @SuppressWarnings("unused")
@@ -190,7 +197,6 @@ final class PosixAMD64VaListSnippets extends SubstrateTemplates implements Snipp
                     throw VMError.shouldNotReachHere();
             }
             Arguments args = new Arguments(snippet, node.graph().getGuardsStage(), tool.getLoweringStage());
-            args.add("vaList", node.getVaList());
             template(tool, node, args).instantiate(tool.getMetaAccess(), node, SnippetTemplate.DEFAULT_REPLACER, args);
         }
     }

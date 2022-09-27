@@ -61,6 +61,7 @@ import com.oracle.svm.core.graal.nodes.CEntryPointEnterNode;
 import com.oracle.svm.core.graal.nodes.CEntryPointLeaveNode;
 import com.oracle.svm.core.graal.nodes.CInterfaceReadNode;
 import com.oracle.svm.core.graal.nodes.ReadCallerStackPointerNode;
+import com.oracle.svm.core.graal.nodes.VaListInitializationNode;
 import com.oracle.svm.core.graal.nodes.VaListNextArgNode;
 import com.oracle.svm.core.jni.CallVariant;
 import com.oracle.svm.core.jni.JNIJavaCallVariantWrapperHolder;
@@ -276,13 +277,14 @@ public class JNIJavaCallVariantWrapperMethod extends EntryPointCallStubMethod {
             }
         } else if (callVariant == CallVariant.VA_LIST) {
             ValueNode valist = kit.loadLocal(slotIndex, wordKind);
+            kit.append(new VaListInitializationNode(valist));
             for (int i = firstParamIndex; i < count; i++) {
                 JavaKind kind = invokeSignature.getParameterKind(i);
                 if (kind.isObject()) {
                     kind = wordKind;
                 }
                 assert kind == kind.getStackKind() : "sub-int conversions and bit masking must happen in JNIJavaCallWrapperMethod";
-                ValueNode value = kit.append(new VaListNextArgNode(kind, valist, i - firstParamIndex));
+                ValueNode value = kit.append(new VaListNextArgNode(kind));
                 args.add(value);
             }
         } else {
