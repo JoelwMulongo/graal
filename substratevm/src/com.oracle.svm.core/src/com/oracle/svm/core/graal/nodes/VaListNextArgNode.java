@@ -32,6 +32,7 @@ import org.graalvm.compiler.core.common.type.StampFactory;
 import org.graalvm.compiler.graph.NodeClass;
 import org.graalvm.compiler.nodeinfo.NodeInfo;
 import org.graalvm.compiler.nodes.FixedWithNextNode;
+import org.graalvm.compiler.nodes.ValueNode;
 import org.graalvm.compiler.nodes.memory.SingleMemoryKill;
 import org.graalvm.compiler.nodes.spi.Lowerable;
 import org.graalvm.compiler.nodes.spi.LoweringTool;
@@ -47,9 +48,16 @@ import jdk.vm.ci.meta.JavaKind;
 public final class VaListNextArgNode extends FixedWithNextNode implements Lowerable, SingleMemoryKill {
     public static final NodeClass<VaListNextArgNode> TYPE = NodeClass.create(VaListNextArgNode.class);
 
-    public VaListNextArgNode(JavaKind kind) {
+    @Input protected ValueNode vaList;
+
+    public VaListNextArgNode(JavaKind kind, ValueNode vaList) {
         super(TYPE, StampFactory.forKind(kind));
         assert kind.isPrimitive() && kind != JavaKind.Void;
+        this.vaList = vaList;
+    }
+
+    public ValueNode getVaList() {
+        return vaList;
     }
 
     @Override

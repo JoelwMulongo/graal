@@ -276,15 +276,15 @@ public class JNIJavaCallVariantWrapperMethod extends EntryPointCallStubMethod {
                 slotIndex += loadKind.getSlotCount();
             }
         } else if (callVariant == CallVariant.VA_LIST) {
-            ValueNode valist = kit.loadLocal(slotIndex, wordKind);
-            kit.append(new VaListInitializationNode(valist));
+            ValueNode vaList = kit.loadLocal(slotIndex, wordKind);
+            ValueNode vaListInitialized = kit.append(new VaListInitializationNode(vaList));
             for (int i = firstParamIndex; i < count; i++) {
                 JavaKind kind = invokeSignature.getParameterKind(i);
                 if (kind.isObject()) {
                     kind = wordKind;
                 }
                 assert kind == kind.getStackKind() : "sub-int conversions and bit masking must happen in JNIJavaCallWrapperMethod";
-                ValueNode value = kit.append(new VaListNextArgNode(kind));
+                ValueNode value = kit.append(new VaListNextArgNode(kind, vaListInitialized));
                 args.add(value);
             }
         } else {

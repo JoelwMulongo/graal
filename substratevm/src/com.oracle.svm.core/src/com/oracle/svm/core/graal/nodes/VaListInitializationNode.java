@@ -29,7 +29,6 @@ import static org.graalvm.compiler.nodeinfo.NodeCycles.CYCLES_8;
 import static org.graalvm.compiler.nodeinfo.NodeSize.SIZE_8;
 
 import org.graalvm.compiler.core.common.type.StampFactory;
-import org.graalvm.compiler.graph.Node;
 import org.graalvm.compiler.graph.NodeClass;
 import org.graalvm.compiler.nodeinfo.NodeInfo;
 import org.graalvm.compiler.nodes.FixedWithNextNode;
@@ -48,8 +47,7 @@ import jdk.vm.ci.meta.JavaKind;
 public class VaListInitializationNode extends FixedWithNextNode implements SingleMemoryKill, Lowerable {
     public static final NodeClass<VaListInitializationNode> TYPE = NodeClass.create(VaListInitializationNode.class);
 
-    @Node.Input
-    protected ValueNode vaList;
+    @Input protected ValueNode vaList;
 
     public VaListInitializationNode(ValueNode vaList) {
         super(TYPE, StampFactory.forKind(JavaKind.Object));

@@ -35,14 +35,14 @@ import org.graalvm.compiler.replacements.SnippetTemplate;
 import org.graalvm.compiler.replacements.SnippetTemplate.Arguments;
 import org.graalvm.compiler.replacements.SnippetTemplate.SnippetInfo;
 import org.graalvm.compiler.replacements.Snippets;
+import org.graalvm.nativeimage.StackValue;
+import org.graalvm.nativeimage.c.type.WordPointer;
 import org.graalvm.word.Pointer;
 
-import com.oracle.svm.core.FrameAccess;
+import com.oracle.svm.core.graal.nodes.VaListInitializationNode;
 import com.oracle.svm.core.graal.nodes.VaListNextArgNode;
 import com.oracle.svm.core.graal.snippets.NodeLoweringProvider;
 import com.oracle.svm.core.graal.snippets.SubstrateTemplates;
-import com.oracle.svm.core.graal.snippets.VaListInitializationSnippets;
-import com.oracle.svm.core.graal.stackvalue.LoweredStackValueNode;
 import com.oracle.svm.core.util.VMError;
 
 /**
@@ -71,30 +71,35 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
     }
 
     @Snippet
-    protected static double vaArgDoubleSnippet() {
-        Pointer vaListPointer = (Pointer) LoweredStackValueNode.loweredStackValue(FrameAccess.wordSize(), FrameAccess.wordSize(), VaListInitializationSnippets.vaListIdentity);
+    protected static Pointer vaListInitialization(Pointer vaList) {
+        Pointer vaListPointer = (Pointer) StackValue.get(WordPointer.class);
+        vaListPointer.writeWord(0, vaList);
+        return vaListPointer;
+    }
+
+    @Snippet
+    protected static double vaArgDoubleSnippet(Pointer vaListPointer) {
         Pointer vaList = vaListPointer.readWord(0);
         vaListPointer.writeWord(0, vaList.add(8));
         return vaList.readDouble(0);
     }
 
     @Snippet
-    protected static float vaArgFloatSnippet() {
+    protected static float vaArgFloatSnippet(Pointer vaListPointer) {
         // float is always promoted to double when passed in varargs
-        return (float) vaArgDoubleSnippet();
+        return (float) vaArgDoubleSnippet(vaListPointer);
     }
 
     @Snippet
-    protected static long vaArgLongSnippet() {
-        Pointer vaListPointer = (Pointer) LoweredStackValueNode.loweredStackValue(FrameAccess.wordSize(), FrameAccess.wordSize(), VaListInitializationSnippets.vaListIdentity);
+    protected static long vaArgLongSnippet(Pointer vaListPointer) {
         Pointer vaList = vaListPointer.readWord(0);
         vaListPointer.writeWord(0, vaList.add(8));
         return vaList.readLong(0);
     }
 
     @Snippet
-    protected static int vaArgIntSnippet() {
-        return (int) vaArgLongSnippet();
+    protected static int vaArgIntSnippet(Pointer vaListPointer) {
+        return (int) vaArgLongSnippet(vaListPointer);
     }
 
     @SuppressWarnings("unused")
@@ -104,7 +109,20 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
 
     private PosixRISCV64VaListSnippets(OptionValues options, Providers providers, Map<Class<? extends Node>, NodeLoweringProvider<?>> lowerings) {
         super(options, providers);
+        lowerings.put(VaListInitializationNode.class, new VaListInitializationSnippetsLowering());
         lowerings.put(VaListNextArgNode.class, new VaListSnippetsLowering());
+    }
+
+    protected class VaListInitializationSnippetsLowering implements NodeLoweringProvider<VaListInitializationNode> {
+
+        private final SnippetInfo vaListInitialization = snippet(PosixRISCV64VaListSnippets.class, "vaListInitialization");
+
+        @Override
+        public void lower(VaListInitializationNode node, LoweringTool tool) {
+            Arguments args = new Arguments(vaListInitialization, node.graph().getGuardsStage(), tool.getLoweringStage());
+            args.add("vaList", node.getVaList());
+            template(node, args).instantiate(providers.getMetaAccess(), node, SnippetTemplate.DEFAULT_REPLACER, args);
+        }
     }
 
     protected class VaListSnippetsLowering implements NodeLoweringProvider<VaListNextArgNode> {
@@ -136,6 +154,7 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
                     throw VMError.shouldNotReachHere();
             }
             Arguments args = new Arguments(snippet, node.graph().getGuardsStage(), tool.getLoweringStage());
+            args.add("vaListPointer", node.getVaList());
             template(node, args).instantiate(providers.getMetaAccess(), node, SnippetTemplate.DEFAULT_REPLACER, args);
         }
     }
