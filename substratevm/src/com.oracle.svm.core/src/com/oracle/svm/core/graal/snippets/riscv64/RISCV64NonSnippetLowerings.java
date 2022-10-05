@@ -41,12 +41,12 @@ final class RISCV64NonSnippetLowerings extends NonSnippetLowerings {
 
     @SuppressWarnings("unused")
     public static void registerLowerings(RuntimeConfiguration runtimeConfig, Predicate<ResolvedJavaMethod> mustNotAllocatePredicate, OptionValues options,
-                    Providers providers, Map<Class<? extends Node>, NodeLoweringProvider<?>> lowerings) {
-        new RISCV64NonSnippetLowerings(runtimeConfig, mustNotAllocatePredicate, options, providers, lowerings);
+                    Providers providers, Map<Class<? extends Node>, NodeLoweringProvider<?>> lowerings, boolean hosted) {
+        new RISCV64NonSnippetLowerings(runtimeConfig, mustNotAllocatePredicate, options, providers, lowerings, hosted);
     }
 
     private RISCV64NonSnippetLowerings(RuntimeConfiguration runtimeConfig, Predicate<ResolvedJavaMethod> mustNotAllocatePredicate, OptionValues options,
-                    Providers providers, Map<Class<? extends Node>, NodeLoweringProvider<?>> lowerings) {
-        super(runtimeConfig, mustNotAllocatePredicate, options, providers, lowerings);
+                    Providers providers, Map<Class<? extends Node>, NodeLoweringProvider<?>> lowerings, boolean hosted) {
+        super(runtimeConfig, mustNotAllocatePredicate, options, providers, lowerings, hosted);
     }
 }

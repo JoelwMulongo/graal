@@ -104,7 +104,7 @@ final class PosixAMD64VaListSnippets extends SubstrateTemplates implements Snipp
     private static final int REG_SAVE_AREA_LOCATION = 16;
 
     @Snippet
-    protected static Pointer vaListInitialization(Pointer vaList) {
+    protected static Pointer vaListInitializationSnippet(Pointer vaList) {
         return vaList;
     }
 
@@ -165,7 +165,7 @@ final class PosixAMD64VaListSnippets extends SubstrateTemplates implements Snipp
 
     private PosixAMD64VaListSnippets(OptionValues options, Providers providers, Map<Class<? extends Node>, NodeLoweringProvider<?>> lowerings) {
         super(options, providers);
-        this.vaListInitialization = snippet(providers, PosixAMD64VaListSnippets.class, "vaListInitialization");
+        this.vaListInitialization = snippet(providers, PosixAMD64VaListSnippets.class, "vaListInitializationSnippet");
 
         this.vaArgDouble = snippet(providers, PosixAMD64VaListSnippets.class, "vaArgDoubleSnippet");
         this.vaArgFloat = snippet(providers, PosixAMD64VaListSnippets.class, "vaArgFloatSnippet");
@@ -177,6 +177,7 @@ final class PosixAMD64VaListSnippets extends SubstrateTemplates implements Snipp
     }
 
     protected class VaListInitializationSnippetsLowering implements NodeLoweringProvider<VaListInitializationNode> {
+
         @Override
         public void lower(VaListInitializationNode node, LoweringTool tool) {
             Arguments args = new Arguments(vaListInitialization, node.graph().getGuardsStage(), tool.getLoweringStage());

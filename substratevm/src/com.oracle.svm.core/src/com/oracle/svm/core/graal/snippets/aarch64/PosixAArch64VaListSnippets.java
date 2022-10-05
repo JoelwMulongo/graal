@@ -101,7 +101,7 @@ final class PosixAArch64VaListSnippets extends SubstrateTemplates implements Sni
     private static final int FP_TOP_LOCATION = 16;
 
     @Snippet
-    protected static Pointer vaListInitialization(Pointer vaList) {
+    protected static Pointer vaListInitializationSnippet(Pointer vaList) {
         return vaList;
     }
 
@@ -165,7 +165,7 @@ final class PosixAArch64VaListSnippets extends SubstrateTemplates implements Sni
         lowerings.put(VaListInitializationNode.class, new VaListInitializationSnippetsLowering());
         lowerings.put(VaListNextArgNode.class, new VaListSnippetsLowering());
 
-        this.vaListInitialization = snippet(providers, PosixAArch64VaListSnippets.class, "vaListInitialization");
+        this.vaListInitialization = snippet(providers, PosixAArch64VaListSnippets.class, "vaListInitializationSnippet");
 
         this.vaArgDouble = snippet(providers, PosixAArch64VaListSnippets.class, "vaArgDoubleSnippet");
         this.vaArgFloat = snippet(providers, PosixAArch64VaListSnippets.class, "vaArgFloatSnippet");

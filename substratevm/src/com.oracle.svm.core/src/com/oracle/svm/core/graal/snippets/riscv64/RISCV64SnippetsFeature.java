@@ -56,7 +56,7 @@ class RISCV64SnippetsFeature implements InternalFeature {
         }
 
         RISCV64ArithmeticSnippets.registerLowerings(options, providers, lowerings);
-        RISCV64NonSnippetLowerings.registerLowerings(runtimeConfig, mustNotAllocatePredicate, options, providers, lowerings);
+        RISCV64NonSnippetLowerings.registerLowerings(runtimeConfig, mustNotAllocatePredicate, options, providers, lowerings, hosted);
         PosixRISCV64VaListSnippets.registerLowerings(options, providers, lowerings);
     }
 }

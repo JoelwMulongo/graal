@@ -66,12 +66,11 @@ import com.oracle.svm.core.util.VMError;
  */
 final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Snippets {
 
-    private PosixRISCV64VaListSnippets(OptionValues options, Providers providers) {
-        super(options, providers);
-    }
+    private static final int STACK_AREA_GP_ALIGNMENT = 8;
+    private static final int STACK_AREA_FP_ALIGNMENT = 8;
 
     @Snippet
-    protected static Pointer vaListInitialization(Pointer vaList) {
+    protected static Pointer vaListInitializationSnippet(Pointer vaList) {
         Pointer vaListPointer = (Pointer) StackValue.get(WordPointer.class);
         vaListPointer.writeWord(0, vaList);
         return vaListPointer;
@@ -80,7 +79,7 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
     @Snippet
     protected static double vaArgDoubleSnippet(Pointer vaListPointer) {
         Pointer vaList = vaListPointer.readWord(0);
-        vaListPointer.writeWord(0, vaList.add(8));
+        vaListPointer.writeWord(0, vaList.add(STACK_AREA_FP_ALIGNMENT));
         return vaList.readDouble(0);
     }
 
@@ -93,7 +92,7 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
     @Snippet
     protected static long vaArgLongSnippet(Pointer vaListPointer) {
         Pointer vaList = vaListPointer.readWord(0);
-        vaListPointer.writeWord(0, vaList.add(8));
+        vaListPointer.writeWord(0, vaList.add(STACK_AREA_GP_ALIGNMENT));
         return vaList.readLong(0);
     }
 
@@ -107,31 +106,36 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
         new PosixRISCV64VaListSnippets(options, providers, lowerings);
     }
 
+    private final SnippetInfo vaListInitialization;
+
+    private final SnippetInfo vaArgDouble;
+    private final SnippetInfo vaArgFloat;
+    private final SnippetInfo vaArgLong;
+    private final SnippetInfo vaArgInt;
+
     private PosixRISCV64VaListSnippets(OptionValues options, Providers providers, Map<Class<? extends Node>, NodeLoweringProvider<?>> lowerings) {
         super(options, providers);
         lowerings.put(VaListInitializationNode.class, new VaListInitializationSnippetsLowering());
         lowerings.put(VaListNextArgNode.class, new VaListSnippetsLowering());
+
+        this.vaListInitialization = snippet(providers, PosixRISCV64VaListSnippets.class, "vaListInitializationSnippet");
+
+        this.vaArgDouble = snippet(providers, PosixRISCV64VaListSnippets.class, "vaArgDoubleSnippet");
+        this.vaArgFloat = snippet(providers, PosixRISCV64VaListSnippets.class, "vaArgFloatSnippet");
+        this.vaArgLong = snippet(providers, PosixRISCV64VaListSnippets.class, "vaArgLongSnippet");
+        this.vaArgInt = snippet(providers, PosixRISCV64VaListSnippets.class, "vaArgIntSnippet");
     }
 
     protected class VaListInitializationSnippetsLowering implements NodeLoweringProvider<VaListInitializationNode> {
-
-        private final SnippetInfo vaListInitialization = snippet(PosixRISCV64VaListSnippets.class, "vaListInitialization");
-
         @Override
         public void lower(VaListInitializationNode node, LoweringTool tool) {
             Arguments args = new Arguments(vaListInitialization, node.graph().getGuardsStage(), tool.getLoweringStage());
             args.add("vaList", node.getVaList());
-            template(node, args).instantiate(providers.getMetaAccess(), node, SnippetTemplate.DEFAULT_REPLACER, args);
+            template(tool, node, args).instantiate(tool.getMetaAccess(), node, SnippetTemplate.DEFAULT_REPLACER, args);
         }
     }
 
     protected class VaListSnippetsLowering implements NodeLoweringProvider<VaListNextArgNode> {
-
-        private final SnippetInfo vaArgDouble = snippet(PosixRISCV64VaListSnippets.class, "vaArgDoubleSnippet");
-        private final SnippetInfo vaArgFloat = snippet(PosixRISCV64VaListSnippets.class, "vaArgFloatSnippet");
-        private final SnippetInfo vaArgLong = snippet(PosixRISCV64VaListSnippets.class, "vaArgLongSnippet");
-        private final SnippetInfo vaArgInt = snippet(PosixRISCV64VaListSnippets.class, "vaArgIntSnippet");
-
         @Override
         public void lower(VaListNextArgNode node, LoweringTool tool) {
             SnippetInfo snippet;
@@ -155,7 +159,7 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
             }
             Arguments args = new Arguments(snippet, node.graph().getGuardsStage(), tool.getLoweringStage());
             args.add("vaListPointer", node.getVaList());
-            template(node, args).instantiate(providers.getMetaAccess(), node, SnippetTemplate.DEFAULT_REPLACER, args);
+            template(tool, node, args).instantiate(tool.getMetaAccess(), node, SnippetTemplate.DEFAULT_REPLACER, args);
         }
     }
 }
