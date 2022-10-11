@@ -24,11 +24,9 @@
  */
 package com.oracle.svm.core.graal.nodes;
 
-import static org.graalvm.compiler.nodeinfo.InputType.Memory;
-import static org.graalvm.compiler.nodeinfo.NodeCycles.CYCLES_8;
+import static org.graalvm.compiler.nodeinfo.NodeCycles.CYCLES_4;
 import static org.graalvm.compiler.nodeinfo.NodeSize.SIZE_8;
 
-import org.graalvm.compiler.core.common.type.StampFactory;
 import org.graalvm.compiler.graph.NodeClass;
 import org.graalvm.compiler.nodeinfo.NodeInfo;
 import org.graalvm.compiler.nodes.FixedWithNextNode;
@@ -38,19 +36,19 @@ import org.graalvm.compiler.nodes.spi.Lowerable;
 import org.graalvm.compiler.nodes.spi.LoweringTool;
 import org.graalvm.word.LocationIdentity;
 
-import jdk.vm.ci.meta.JavaKind;
+import com.oracle.svm.core.FrameAccess;
 
 /**
  * Puts the VaList in a StackValue, used as a layer to access and modify it.
  */
-@NodeInfo(size = SIZE_8, cycles = CYCLES_8, allowedUsageTypes = {Memory})
-public class VaListInitializationNode extends FixedWithNextNode implements SingleMemoryKill, Lowerable {
+@NodeInfo(size = SIZE_8, cycles = CYCLES_4)
+public final class VaListInitializationNode extends FixedWithNextNode implements SingleMemoryKill, Lowerable {
     public static final NodeClass<VaListInitializationNode> TYPE = NodeClass.create(VaListInitializationNode.class);
 
     @Input protected ValueNode vaList;
 
     public VaListInitializationNode(ValueNode vaList) {
-        super(TYPE, StampFactory.forKind(JavaKind.Object));
+        super(TYPE, FrameAccess.getWordStamp());
         this.vaList = vaList;
     }
 
