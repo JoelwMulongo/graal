@@ -71,12 +71,12 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
     private static final int STACK_AREA_GP_ALIGNMENT = 8;
     private static final int STACK_AREA_FP_ALIGNMENT = 8;
 
-    private static final StackSlotIdentity vaListIdentity = new StackSlotIdentity("PosixRISCV64VaListSnippets.vaListSlotIdentifier", true);
+    private static final StackSlotIdentity vaListIdentity = new StackSlotIdentity("PosixRISCV64VaListSnippets.vaListSlotIdentifier", false);
 
     @Snippet
     protected static Pointer vaListInitializationSnippet(Pointer vaList, @ConstantParameter StackSlotIdentity vaListSlotIdentifier) {
         Pointer vaListPointer = (Pointer) LoweredStackValueNode.loweredStackValue(FrameAccess.wordSize(), FrameAccess.wordSize(), vaListSlotIdentifier);
-        vaListPointer.writeWord(0, vaList);
+        //vaListPointer.writeWord(0, vaList);
         return vaListPointer;
     }
 

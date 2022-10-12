@@ -34,6 +34,7 @@ import org.graalvm.compiler.core.common.type.StampFactory;
 import org.graalvm.compiler.core.common.type.StampPair;
 import org.graalvm.compiler.debug.DebugContext;
 import org.graalvm.compiler.nodes.AbstractMergeNode;
+import org.graalvm.compiler.nodes.AbstractStateSplit;
 import org.graalvm.compiler.nodes.CallTargetNode;
 import org.graalvm.compiler.nodes.CallTargetNode.InvokeKind;
 import org.graalvm.compiler.nodes.ConstantNode;
@@ -46,6 +47,7 @@ import org.graalvm.compiler.nodes.ValuePhiNode;
 import org.graalvm.compiler.nodes.calc.FloatConvertNode;
 import org.graalvm.compiler.nodes.calc.ReinterpretNode;
 import org.graalvm.compiler.nodes.memory.OnHeapMemoryAccess.BarrierType;
+import org.graalvm.compiler.nodes.memory.WriteNode;
 import org.graalvm.compiler.nodes.memory.address.OffsetAddressNode;
 import org.graalvm.compiler.word.WordTypes;
 import org.graalvm.nativeimage.Platform;
@@ -277,7 +279,11 @@ public class JNIJavaCallVariantWrapperMethod extends EntryPointCallStubMethod {
             }
         } else if (callVariant == CallVariant.VA_LIST) {
             ValueNode vaList = kit.loadLocal(slotIndex, wordKind);
-            ValueNode vaListInitialized = kit.append(new VaListInitializationNode(vaList));
+            AbstractStateSplit vaListInitialized = kit.append(new VaListInitializationNode(vaList));
+            if (Platform.includedIn(Platform.RISCV64.class)) {
+                vaListInitialized.setStateAfter(kit.getFrameState().create(kit.bci(), vaListInitialized));
+                kit.append(new WriteNode(new OffsetAddressNode(vaListInitialized, ConstantNode.forLong(0)), LocationIdentity.any(), vaList, BarrierType.NONE, MemoryOrderMode.VOLATILE));
+            }
             for (int i = firstParamIndex; i < count; i++) {
                 JavaKind kind = invokeSignature.getParameterKind(i);
                 if (kind.isObject()) {

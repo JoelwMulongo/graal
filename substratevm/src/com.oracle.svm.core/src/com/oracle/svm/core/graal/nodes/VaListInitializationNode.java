@@ -27,13 +27,14 @@ package com.oracle.svm.core.graal.nodes;
 import static org.graalvm.compiler.nodeinfo.NodeCycles.CYCLES_4;
 import static org.graalvm.compiler.nodeinfo.NodeSize.SIZE_8;
 
+import org.graalvm.compiler.graph.IterableNodeType;
 import org.graalvm.compiler.graph.NodeClass;
 import org.graalvm.compiler.nodeinfo.NodeInfo;
-import org.graalvm.compiler.nodes.FixedWithNextNode;
+import org.graalvm.compiler.nodes.AbstractStateSplit;
 import org.graalvm.compiler.nodes.ValueNode;
 import org.graalvm.compiler.nodes.memory.SingleMemoryKill;
 import org.graalvm.compiler.nodes.spi.Lowerable;
-import org.graalvm.compiler.nodes.spi.LoweringTool;
+import org.graalvm.nativeimage.Platform;
 import org.graalvm.word.LocationIdentity;
 
 import com.oracle.svm.core.FrameAccess;
@@ -42,7 +43,7 @@ import com.oracle.svm.core.FrameAccess;
  * Puts the VaList in a StackValue, used as a layer to access and modify it.
  */
 @NodeInfo(size = SIZE_8, cycles = CYCLES_4)
-public final class VaListInitializationNode extends FixedWithNextNode implements SingleMemoryKill, Lowerable {
+public final class VaListInitializationNode extends AbstractStateSplit implements SingleMemoryKill, Lowerable, IterableNodeType {
     public static final NodeClass<VaListInitializationNode> TYPE = NodeClass.create(VaListInitializationNode.class);
 
     @Input protected ValueNode vaList;
@@ -57,10 +58,8 @@ public final class VaListInitializationNode extends FixedWithNextNode implements
     }
 
     @Override
-    public void lower(LoweringTool tool) {
-        if (tool.getLoweringStage() == LoweringTool.StandardLoweringStage.LOW_TIER) {
-            tool.getLowerer().lower(this, tool);
-        }
+    public boolean hasSideEffect() {
+        return Platform.includedIn(Platform.RISCV64.class);
     }
 
     @Override
