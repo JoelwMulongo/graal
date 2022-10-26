@@ -27,8 +27,15 @@ package com.oracle.svm.core.graal.snippets.riscv64;
 import java.util.Map;
 
 import org.graalvm.compiler.api.replacements.Snippet;
-import org.graalvm.compiler.api.replacements.Snippet.ConstantParameter;
+import org.graalvm.compiler.core.common.memory.MemoryOrderMode;
 import org.graalvm.compiler.graph.Node;
+import org.graalvm.compiler.nodes.ConstantNode;
+import org.graalvm.compiler.nodes.FixedNode;
+import org.graalvm.compiler.nodes.FrameState;
+import org.graalvm.compiler.nodes.StructuredGraph;
+import org.graalvm.compiler.nodes.memory.OnHeapMemoryAccess.BarrierType;
+import org.graalvm.compiler.nodes.memory.WriteNode;
+import org.graalvm.compiler.nodes.memory.address.OffsetAddressNode;
 import org.graalvm.compiler.nodes.spi.LoweringTool;
 import org.graalvm.compiler.options.OptionValues;
 import org.graalvm.compiler.phases.util.Providers;
@@ -36,6 +43,7 @@ import org.graalvm.compiler.replacements.SnippetTemplate;
 import org.graalvm.compiler.replacements.SnippetTemplate.Arguments;
 import org.graalvm.compiler.replacements.SnippetTemplate.SnippetInfo;
 import org.graalvm.compiler.replacements.Snippets;
+import org.graalvm.word.LocationIdentity;
 import org.graalvm.word.Pointer;
 
 import com.oracle.svm.core.FrameAccess;
@@ -43,9 +51,11 @@ import com.oracle.svm.core.graal.nodes.VaListInitializationNode;
 import com.oracle.svm.core.graal.nodes.VaListNextArgNode;
 import com.oracle.svm.core.graal.snippets.NodeLoweringProvider;
 import com.oracle.svm.core.graal.snippets.SubstrateTemplates;
-import com.oracle.svm.core.graal.stackvalue.LoweredStackValueNode;
+import com.oracle.svm.core.graal.stackvalue.StackValueNode;
 import com.oracle.svm.core.graal.stackvalue.StackValueNode.StackSlotIdentity;
 import com.oracle.svm.core.util.VMError;
+
+import jdk.vm.ci.code.BytecodeFrame;
 
 /**
  * Implementation of C {@code va_list} handling for System V systems on RISCV64 (Linux). A
@@ -72,13 +82,6 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
     private static final int STACK_AREA_FP_ALIGNMENT = 8;
 
     private static final StackSlotIdentity vaListIdentity = new StackSlotIdentity("PosixRISCV64VaListSnippets.vaListSlotIdentifier", false);
-
-    @Snippet
-    protected static Pointer vaListInitializationSnippet(Pointer vaList, @ConstantParameter StackSlotIdentity vaListSlotIdentifier) {
-        Pointer vaListPointer = (Pointer) LoweredStackValueNode.loweredStackValue(FrameAccess.wordSize(), FrameAccess.wordSize(), vaListSlotIdentifier);
-        //vaListPointer.writeWord(0, vaList);
-        return vaListPointer;
-    }
 
     @Snippet
     protected static double vaArgDoubleSnippet(Pointer vaListPointer) {
@@ -110,8 +113,6 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
         new PosixRISCV64VaListSnippets(options, providers, lowerings);
     }
 
-    private final SnippetInfo vaListInitialization;
-
     private final SnippetInfo vaArgDouble;
     private final SnippetInfo vaArgFloat;
     private final SnippetInfo vaArgLong;
@@ -119,7 +120,6 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
 
     private PosixRISCV64VaListSnippets(OptionValues options, Providers providers, Map<Class<? extends Node>, NodeLoweringProvider<?>> lowerings) {
         super(options, providers);
-        this.vaListInitialization = snippet(providers, PosixRISCV64VaListSnippets.class, "vaListInitializationSnippet");
 
         this.vaArgDouble = snippet(providers, PosixRISCV64VaListSnippets.class, "vaArgDoubleSnippet");
         this.vaArgFloat = snippet(providers, PosixRISCV64VaListSnippets.class, "vaArgFloatSnippet");
@@ -133,10 +133,20 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
     protected class VaListInitializationSnippetsLowering implements NodeLoweringProvider<VaListInitializationNode> {
         @Override
         public void lower(VaListInitializationNode node, LoweringTool tool) {
-            Arguments args = new Arguments(vaListInitialization, node.graph().getGuardsStage(), tool.getLoweringStage());
-            args.add("vaList", node.getVaList());
-            args.addConst("vaListSlotIdentifier", vaListIdentity);
-            template(tool, node, args).instantiate(tool.getMetaAccess(), node, SnippetTemplate.DEFAULT_REPLACER, args);
+            StructuredGraph graph = node.graph();
+
+            StackValueNode stackValueNode = graph.add(StackValueNode.create(FrameAccess.wordSize(), vaListIdentity, true));
+            stackValueNode.setStateAfter(graph.add(new FrameState(BytecodeFrame.UNKNOWN_BCI)));
+
+            OffsetAddressNode address = graph.unique(new OffsetAddressNode(stackValueNode, graph.unique(ConstantNode.forLong(0))));
+            WriteNode writeNode = graph.add(new WriteNode(address, LocationIdentity.any(), node.getVaList(), BarrierType.NONE, MemoryOrderMode.VOLATILE));
+
+            FixedNode successor = node.next();
+            node.replaceAndDelete(stackValueNode);
+            stackValueNode.setNext(successor);
+
+            graph.addAfterFixed(stackValueNode, writeNode);
+            tool.getLowerer().lower(stackValueNode, tool);
         }
     }
 
