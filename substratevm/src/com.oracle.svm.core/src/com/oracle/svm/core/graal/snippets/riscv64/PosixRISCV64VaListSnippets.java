@@ -139,7 +139,7 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
             stackValueNode.setStateAfter(graph.add(new FrameState(BytecodeFrame.UNKNOWN_BCI)));
 
             OffsetAddressNode address = graph.unique(new OffsetAddressNode(stackValueNode, graph.unique(ConstantNode.forLong(0))));
-            WriteNode writeNode = graph.add(new WriteNode(address, LocationIdentity.any(), node.getVaList(), BarrierType.NONE, MemoryOrderMode.VOLATILE));
+            WriteNode writeNode = graph.add(new WriteNode(address, LocationIdentity.any(), node.getVaList(), BarrierType.NONE, MemoryOrderMode.PLAIN));
 
             FixedNode successor = node.next();
             node.replaceAndDelete(stackValueNode);
