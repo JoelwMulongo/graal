@@ -25,12 +25,13 @@
 package org.graalvm.compiler.hotspot.riscv64;
 
 import static jdk.vm.ci.meta.Value.ILLEGAL;
+import static org.graalvm.compiler.hotspot.HotSpotBackend.EXCEPTION_HANDLER;
+import static org.graalvm.compiler.hotspot.HotSpotBackend.EXCEPTION_HANDLER_IN_CALLER;
 import static org.graalvm.compiler.hotspot.HotSpotForeignCallLinkage.JUMP_ADDRESS;
 import static org.graalvm.compiler.hotspot.HotSpotForeignCallLinkage.RegisterEffect.DESTROYS_ALL_CALLER_SAVE_REGISTERS;
 
 import org.graalvm.compiler.core.common.LIRKind;
-import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
-import org.graalvm.compiler.hotspot.HotSpotBackend;
+import org.graalvm.compiler.core.riscv64.ShadowedRISCV64;
 import org.graalvm.compiler.hotspot.HotSpotForeignCallLinkageImpl;
 import org.graalvm.compiler.hotspot.HotSpotGraalRuntimeProvider;
 import org.graalvm.compiler.hotspot.meta.HotSpotHostForeignCallsProvider;
@@ -39,7 +40,6 @@ import org.graalvm.compiler.hotspot.word.HotSpotWordTypes;
 import org.graalvm.compiler.options.OptionValues;
 
 import jdk.vm.ci.code.CallingConvention;
-import jdk.vm.ci.code.Register;
 import jdk.vm.ci.code.RegisterValue;
 import jdk.vm.ci.code.TargetDescription;
 import jdk.vm.ci.hotspot.HotSpotCodeCacheProvider;
@@ -65,15 +65,11 @@ public class RISCV64HotSpotForeignCallsProvider extends HotSpotHostForeignCallsP
 
         // The calling convention for the exception handler stub is (only?) defined in
         // TemplateInterpreterGenerator::generate_throw_exception()
-        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
-
-        RegisterValue exception = ((Register) RISCV64ReflectionUtil.readStaticField(riscv64, "x5")).asValue(LIRKind.reference(word));
-        RegisterValue exceptionPc = ((Register) RISCV64ReflectionUtil.readStaticField(riscv64, "x7")).asValue(LIRKind.value(word));
-
+        RegisterValue exception = ShadowedRISCV64.x5.asValue(LIRKind.reference(word));
+        RegisterValue exceptionPc = ShadowedRISCV64.x7.asValue(LIRKind.value(word));
         CallingConvention exceptionCc = new CallingConvention(0, ILLEGAL, exception, exceptionPc);
-        register(new HotSpotForeignCallLinkageImpl(HotSpotBackend.EXCEPTION_HANDLER, 0L, DESTROYS_ALL_CALLER_SAVE_REGISTERS, exceptionCc, null));
-        register(new HotSpotForeignCallLinkageImpl(HotSpotBackend.EXCEPTION_HANDLER_IN_CALLER, JUMP_ADDRESS, DESTROYS_ALL_CALLER_SAVE_REGISTERS, exceptionCc,
-                        null));
+        register(new HotSpotForeignCallLinkageImpl(EXCEPTION_HANDLER, 0L, DESTROYS_ALL_CALLER_SAVE_REGISTERS, exceptionCc, null));
+        register(new HotSpotForeignCallLinkageImpl(EXCEPTION_HANDLER_IN_CALLER, JUMP_ADDRESS, DESTROYS_ALL_CALLER_SAVE_REGISTERS, exceptionCc, null));
 
         super.initialize(providers, options);
     }

@@ -413,6 +413,9 @@ enum ELFAArch64Relocation implements ELFRelocationMethod {
     }
 }
 
+/**
+ * Reference: https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-elf.adoc.
+ */
 enum ELFRISCV64Relocation implements ELFRelocationMethod {
     R_RISCV_NONE(0),
     R_RISCV_32(1),
@@ -468,7 +471,7 @@ enum ELFRISCV64Relocation implements ELFRelocationMethod {
     R_RISCV_SET16(55),
     R_RISCV_SET32(56),
     R_RISCV_32_PCREL(57),
-    R_RISCV_NUM(58);
+    R_RISCV_IRELATIVE(58);
 
     private final long code;
 

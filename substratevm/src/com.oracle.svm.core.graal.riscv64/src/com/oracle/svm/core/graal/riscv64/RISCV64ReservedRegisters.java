@@ -24,7 +24,7 @@
  */
 package com.oracle.svm.core.graal.riscv64;
 
-import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
+import org.graalvm.compiler.core.riscv64.ShadowedRISCV64;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
 
@@ -39,12 +39,9 @@ public final class RISCV64ReservedRegisters extends ReservedRegisters {
     public static Register stackBaseRegisterCandidate;
 
     static {
-        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(true);
-        if (riscv64 != null) {
-            stackBaseRegisterCandidate = RISCV64ReflectionUtil.readStaticField(riscv64, "x2");
-            threadRegisterCandidate = RISCV64ReflectionUtil.readStaticField(riscv64, "x23");
-            heapBaseRegisterCandidate = RISCV64ReflectionUtil.readStaticField(riscv64, "x27");
-        }
+        stackBaseRegisterCandidate = ShadowedRISCV64.x2;
+        threadRegisterCandidate = ShadowedRISCV64.x23;
+        heapBaseRegisterCandidate = ShadowedRISCV64.x27;
     }
 
     @Platforms(Platform.HOSTED_ONLY.class)

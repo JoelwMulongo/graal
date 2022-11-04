@@ -36,6 +36,7 @@ import org.graalvm.compiler.api.replacements.Fold;
 import org.graalvm.compiler.api.replacements.SnippetReflectionProvider;
 import org.graalvm.compiler.core.common.NumUtil;
 import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
+import org.graalvm.compiler.core.riscv64.ShadowedRISCV64;
 import org.graalvm.compiler.debug.GraalError;
 import org.graalvm.compiler.graph.Node.InjectedNodeParameter;
 import org.graalvm.compiler.graph.Node.NodeIntrinsicFactory;
@@ -57,10 +58,10 @@ import com.oracle.svm.core.CPUFeatureAccess;
 import com.oracle.svm.core.SubstrateTargetDescription;
 import com.oracle.svm.core.SubstrateUtil;
 import com.oracle.svm.core.config.ConfigurationValues;
-import com.oracle.svm.core.feature.InternalFeature;
-import com.oracle.svm.core.jdk.RuntimeSupport;
 import com.oracle.svm.core.feature.AutomaticallyRegisteredFeature;
 import com.oracle.svm.core.feature.AutomaticallyRegisteredImageSingleton;
+import com.oracle.svm.core.feature.InternalFeature;
+import com.oracle.svm.core.jdk.RuntimeSupport;
 import com.oracle.svm.util.ReflectionUtil;
 
 import jdk.vm.ci.aarch64.AArch64;
@@ -366,8 +367,8 @@ public final class RuntimeCPUFeatureCheckImpl {
             return ((AMD64) arch).getFeatures();
         } else if (arch instanceof AArch64) {
             return ((AArch64) arch).getFeatures();
-        } else if (RISCV64ReflectionUtil.getArch(false).isInstance(arch)) {
-            Method getFeatures = RISCV64ReflectionUtil.lookupMethod(RISCV64ReflectionUtil.getArch(false), "getFeatures");
+        } else if (ShadowedRISCV64.riscv64OrNull != null && ShadowedRISCV64.riscv64OrNull.isInstance(arch)) {
+            Method getFeatures = RISCV64ReflectionUtil.lookupMethod(ShadowedRISCV64.riscv64OrNull, "getFeatures");
             getFeatures.setAccessible(true);
             return (EnumSet<?>) RISCV64ReflectionUtil.invokeMethod(getFeatures, arch);
         } else {

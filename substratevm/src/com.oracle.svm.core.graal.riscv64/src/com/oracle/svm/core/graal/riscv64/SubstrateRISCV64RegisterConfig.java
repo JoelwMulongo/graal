@@ -26,10 +26,54 @@ package com.oracle.svm.core.graal.riscv64;
 
 import static com.oracle.svm.core.util.VMError.shouldNotReachHere;
 import static com.oracle.svm.core.util.VMError.unimplemented;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.allRegisters;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f10;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f11;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f12;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f13;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f14;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f15;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f16;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f17;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f18;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f19;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f20;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f21;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f22;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f23;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f24;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f25;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f26;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f27;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f8;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.f9;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x0;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x1;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x10;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x11;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x12;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x13;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x14;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x15;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x16;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x17;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x18;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x19;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x2;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x20;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x21;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x22;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x23;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x24;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x25;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x26;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x27;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x3;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x8;
+import static org.graalvm.compiler.core.riscv64.ShadowedRISCV64.x9;
 
 import java.util.ArrayList;
 
-import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
 import org.graalvm.nativeimage.Platform;
 
 import com.oracle.svm.core.ReservedRegisters;
@@ -72,56 +116,6 @@ public class SubstrateRISCV64RegisterConfig implements SubstrateRegisterConfig {
         this.target = target;
         this.metaAccess = metaAccess;
 
-        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
-
-        Register x0 = RISCV64ReflectionUtil.readStaticField(riscv64, "x0");
-        Register x1 = RISCV64ReflectionUtil.readStaticField(riscv64, "x1");
-        Register x2 = RISCV64ReflectionUtil.readStaticField(riscv64, "x2");
-        Register x3 = RISCV64ReflectionUtil.readStaticField(riscv64, "x3");
-        Register x8 = RISCV64ReflectionUtil.readStaticField(riscv64, "x8");
-        Register x9 = RISCV64ReflectionUtil.readStaticField(riscv64, "x9");
-        Register x10 = RISCV64ReflectionUtil.readStaticField(riscv64, "x10");
-        Register x11 = RISCV64ReflectionUtil.readStaticField(riscv64, "x11");
-        Register x12 = RISCV64ReflectionUtil.readStaticField(riscv64, "x12");
-        Register x13 = RISCV64ReflectionUtil.readStaticField(riscv64, "x13");
-        Register x14 = RISCV64ReflectionUtil.readStaticField(riscv64, "x14");
-        Register x15 = RISCV64ReflectionUtil.readStaticField(riscv64, "x15");
-        Register x16 = RISCV64ReflectionUtil.readStaticField(riscv64, "x16");
-        Register x17 = RISCV64ReflectionUtil.readStaticField(riscv64, "x17");
-        Register x18 = RISCV64ReflectionUtil.readStaticField(riscv64, "x18");
-        Register x19 = RISCV64ReflectionUtil.readStaticField(riscv64, "x19");
-        Register x20 = RISCV64ReflectionUtil.readStaticField(riscv64, "x20");
-        Register x21 = RISCV64ReflectionUtil.readStaticField(riscv64, "x21");
-        Register x22 = RISCV64ReflectionUtil.readStaticField(riscv64, "x22");
-        Register x23 = RISCV64ReflectionUtil.readStaticField(riscv64, "x23");
-        Register x24 = RISCV64ReflectionUtil.readStaticField(riscv64, "x24");
-        Register x25 = RISCV64ReflectionUtil.readStaticField(riscv64, "x25");
-        Register x26 = RISCV64ReflectionUtil.readStaticField(riscv64, "x26");
-        Register x27 = RISCV64ReflectionUtil.readStaticField(riscv64, "x27");
-
-        Register f8 = RISCV64ReflectionUtil.readStaticField(riscv64, "f8");
-        Register f9 = RISCV64ReflectionUtil.readStaticField(riscv64, "f9");
-        Register f10 = RISCV64ReflectionUtil.readStaticField(riscv64, "f10");
-        Register f11 = RISCV64ReflectionUtil.readStaticField(riscv64, "f11");
-        Register f12 = RISCV64ReflectionUtil.readStaticField(riscv64, "f12");
-        Register f13 = RISCV64ReflectionUtil.readStaticField(riscv64, "f13");
-        Register f14 = RISCV64ReflectionUtil.readStaticField(riscv64, "f14");
-        Register f15 = RISCV64ReflectionUtil.readStaticField(riscv64, "f15");
-        Register f16 = RISCV64ReflectionUtil.readStaticField(riscv64, "f16");
-        Register f17 = RISCV64ReflectionUtil.readStaticField(riscv64, "f17");
-        Register f18 = RISCV64ReflectionUtil.readStaticField(riscv64, "f18");
-        Register f19 = RISCV64ReflectionUtil.readStaticField(riscv64, "f19");
-        Register f20 = RISCV64ReflectionUtil.readStaticField(riscv64, "f20");
-        Register f21 = RISCV64ReflectionUtil.readStaticField(riscv64, "f21");
-        Register f22 = RISCV64ReflectionUtil.readStaticField(riscv64, "f22");
-        Register f23 = RISCV64ReflectionUtil.readStaticField(riscv64, "f23");
-        Register f24 = RISCV64ReflectionUtil.readStaticField(riscv64, "f24");
-        Register f25 = RISCV64ReflectionUtil.readStaticField(riscv64, "f25");
-        Register f26 = RISCV64ReflectionUtil.readStaticField(riscv64, "f26");
-        Register f27 = RISCV64ReflectionUtil.readStaticField(riscv64, "f27");
-
-        RegisterArray allRegisters = RISCV64ReflectionUtil.readStaticField(riscv64, "allRegisters");
-
         generalParameterRegs = new RegisterArray(x10, x11, x12, x13, x14, x15, x16, x17);
         fpParameterRegs = new RegisterArray(f10, f11, f12, f13, f14, f15, f16, f17);
 
@@ -130,7 +124,6 @@ public class SubstrateRISCV64RegisterConfig implements SubstrateRegisterConfig {
         ArrayList<Register> regs = new ArrayList<>(allRegisters.asList());
         regs.remove(x2); // sp
         regs.remove(x0); // zero
-
         if (preserveFramePointer) {
             regs.remove(x8);
         }
@@ -164,7 +157,6 @@ public class SubstrateRISCV64RegisterConfig implements SubstrateRegisterConfig {
 
     @Override
     public Register getReturnRegister(JavaKind kind) {
-        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
         switch (kind) {
             case Boolean:
             case Byte:
@@ -173,10 +165,10 @@ public class SubstrateRISCV64RegisterConfig implements SubstrateRegisterConfig {
             case Int:
             case Long:
             case Object:
-                return RISCV64ReflectionUtil.readStaticField(riscv64, "x10");
+                return x10;
             case Float:
             case Double:
-                return RISCV64ReflectionUtil.readStaticField(riscv64, "f10");
+                return f10;
             case Void:
                 return null;
             default:

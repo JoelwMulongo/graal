@@ -59,14 +59,14 @@ public class RISCV64FrameAccess extends FrameAccess {
     @Fold
     @Override
     public int savedBasePointerSize() {
-        // The base pointer is always saved with stp instruction on method entry
+        // The base pointer is always pushed on the stack on method entry
         return wordSize();
     }
 
     @Override
     @Fold
     public int stackPointerAdjustmentOnCall() {
-        // A call on Risv64 does not touch the SP.
+        // A call on RISCV64 does not touch the SP.
         return 0;
     }
 }

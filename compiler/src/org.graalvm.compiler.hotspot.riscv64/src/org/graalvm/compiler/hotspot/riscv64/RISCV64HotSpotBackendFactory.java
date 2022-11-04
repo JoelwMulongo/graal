@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.graalvm.compiler.core.common.alloc.RegisterAllocationConfig;
 import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
+import org.graalvm.compiler.core.riscv64.ShadowedRISCV64;
 import org.graalvm.compiler.debug.GraalError;
 import org.graalvm.compiler.hotspot.GraalHotSpotVMConfig;
 import org.graalvm.compiler.hotspot.HotSpotBackend;
@@ -76,9 +77,8 @@ public class RISCV64HotSpotBackendFactory extends HotSpotBackendFactory {
 
     @Override
     public Class<? extends Architecture> getArchitecture() {
-        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(true);
-        if (riscv64 != null) {
-            return riscv64.asSubclass(Architecture.class);
+        if (ShadowedRISCV64.riscv64OrNull != null) {
+            return ShadowedRISCV64.riscv64OrNull.asSubclass(Architecture.class);
         } else {
             return null;
         }
@@ -119,10 +119,9 @@ public class RISCV64HotSpotBackendFactory extends HotSpotBackendFactory {
 
     @Override
     protected HotSpotRegistersProvider createRegisters() {
-        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
         Class<?> riscv64HotSpotRegisterConfig = RISCV64ReflectionUtil.lookupClass(false, RISCV64ReflectionUtil.hotSpotClass);
         Register tp = RISCV64ReflectionUtil.readStaticField(riscv64HotSpotRegisterConfig, "tp");
-        Register x27 = RISCV64ReflectionUtil.readStaticField(riscv64, "x27");
+        Register x27 = ShadowedRISCV64.x27;
         Register sp = RISCV64ReflectionUtil.readStaticField(riscv64HotSpotRegisterConfig, "sp");
         return new HotSpotRegisters(tp, x27, sp);
     }
@@ -152,34 +151,33 @@ public class RISCV64HotSpotBackendFactory extends HotSpotBackendFactory {
     protected Value[] createNativeABICallerSaveRegisters(@SuppressWarnings("unused") GraalHotSpotVMConfig config, RegisterConfig regConfig) {
         List<Register> callerSave = new ArrayList<>(regConfig.getAllocatableRegisters().asList());
         // Removing callee-saved registers.
-        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
         /* General Purpose Registers. */
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x2"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x8"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x9"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x10"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x19"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x20"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x21"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x22"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x23"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x24"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x25"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x26"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "x27"));
+        callerSave.remove(ShadowedRISCV64.x2);
+        callerSave.remove(ShadowedRISCV64.x8);
+        callerSave.remove(ShadowedRISCV64.x9);
+        callerSave.remove(ShadowedRISCV64.x10);
+        callerSave.remove(ShadowedRISCV64.x19);
+        callerSave.remove(ShadowedRISCV64.x20);
+        callerSave.remove(ShadowedRISCV64.x21);
+        callerSave.remove(ShadowedRISCV64.x22);
+        callerSave.remove(ShadowedRISCV64.x23);
+        callerSave.remove(ShadowedRISCV64.x24);
+        callerSave.remove(ShadowedRISCV64.x25);
+        callerSave.remove(ShadowedRISCV64.x26);
+        callerSave.remove(ShadowedRISCV64.x27);
         /* Floating-Point Registers. */
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f8"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f9"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f10"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f19"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f20"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f21"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f22"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f23"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f24"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f25"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f26"));
-        callerSave.remove(RISCV64ReflectionUtil.readStaticField(riscv64, "f27"));
+        callerSave.remove(ShadowedRISCV64.f8);
+        callerSave.remove(ShadowedRISCV64.f9);
+        callerSave.remove(ShadowedRISCV64.f10);
+        callerSave.remove(ShadowedRISCV64.f19);
+        callerSave.remove(ShadowedRISCV64.f20);
+        callerSave.remove(ShadowedRISCV64.f21);
+        callerSave.remove(ShadowedRISCV64.f22);
+        callerSave.remove(ShadowedRISCV64.f23);
+        callerSave.remove(ShadowedRISCV64.f24);
+        callerSave.remove(ShadowedRISCV64.f25);
+        callerSave.remove(ShadowedRISCV64.f26);
+        callerSave.remove(ShadowedRISCV64.f27);
 
         Value[] nativeABICallerSaveRegisters = new Value[callerSave.size()];
         for (int i = 0; i < callerSave.size(); i++) {

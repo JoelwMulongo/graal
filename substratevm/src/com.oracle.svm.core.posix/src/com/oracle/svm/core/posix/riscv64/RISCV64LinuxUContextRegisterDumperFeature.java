@@ -26,7 +26,7 @@ package com.oracle.svm.core.posix.riscv64;
 
 import static com.oracle.svm.core.RegisterDumper.dumpReg;
 
-import org.graalvm.compiler.core.riscv64.RISCV64ReflectionUtil;
+import org.graalvm.compiler.core.riscv64.ShadowedRISCV64;
 import org.graalvm.nativeimage.ImageSingletons;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
@@ -48,9 +48,8 @@ import com.oracle.svm.core.util.VMError;
 class RISCV64LinuxUContextRegisterDumperFeature implements InternalFeature {
     @Override
     public void afterRegistration(AfterRegistrationAccess access) {
-        Class<?> riscv64 = RISCV64ReflectionUtil.getArch(false);
-        VMError.guarantee(RISCV64ReflectionUtil.readStaticField(riscv64, "x27").equals(RISCV64ReservedRegisters.heapBaseRegisterCandidate));
-        VMError.guarantee(RISCV64ReflectionUtil.readStaticField(riscv64, "x23").equals(RISCV64ReservedRegisters.threadRegisterCandidate));
+        VMError.guarantee(ShadowedRISCV64.x27.equals(RISCV64ReservedRegisters.heapBaseRegisterCandidate));
+        VMError.guarantee(ShadowedRISCV64.x23.equals(RISCV64ReservedRegisters.threadRegisterCandidate));
         ImageSingletons.add(RegisterDumper.class, new RISCV64LinuxUContextRegisterDumper());
     }
 }
