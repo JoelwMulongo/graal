@@ -136,7 +136,9 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
             StructuredGraph graph = node.graph();
 
             StackValueNode stackValueNode = graph.add(StackValueNode.create(FrameAccess.wordSize(), vaListIdentity, true));
-            stackValueNode.setStateAfter(graph.add(new FrameState(BytecodeFrame.UNKNOWN_BCI)));
+            FrameState frameState = new FrameState(BytecodeFrame.UNKNOWN_BCI);
+            frameState.invalidateForDeoptimization();
+            stackValueNode.setStateAfter(graph.add(frameState));
 
             OffsetAddressNode address = graph.unique(new OffsetAddressNode(stackValueNode, graph.unique(ConstantNode.forLong(0))));
             WriteNode writeNode = graph.add(new WriteNode(address, LocationIdentity.any(), node.getVaList(), BarrierType.NONE, MemoryOrderMode.PLAIN));
@@ -146,7 +148,7 @@ final class PosixRISCV64VaListSnippets extends SubstrateTemplates implements Sni
             stackValueNode.setNext(successor);
 
             graph.addAfterFixed(stackValueNode, writeNode);
-            tool.getLowerer().lower(stackValueNode, tool);
+            stackValueNode.lower(tool);
         }
     }
 
