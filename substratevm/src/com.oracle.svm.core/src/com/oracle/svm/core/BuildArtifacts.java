@@ -38,6 +38,8 @@ public interface BuildArtifacts {
         HEADER,
         IMPORT_LIB,
         DEBUG_INFO,
+        JSON,
+        MARKDOWN,
     }
 
     static BuildArtifacts singleton() {
