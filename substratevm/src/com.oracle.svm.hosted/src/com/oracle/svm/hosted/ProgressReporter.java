@@ -615,12 +615,7 @@ public class ProgressReporter {
 
     public void printEpilog(String imageName, NativeImageGenerator generator, ImageClassLoader classLoader, Throwable error, OptionValues parsedHostedOptions) {
         executor.shutdown();
-
-        if (error != null && !NativeImageOptions.ErrorFileToStdout.getValue()) {
-            Path errorReportPath = NativeImageOptions.getErrorFilePath();
-            ReportUtils.report("GraalVM Native Image Error Report", errorReportPath, p -> VMErrorReporter.generateErrorReport(p, classLoader, error), false);
-            BuildArtifacts.singleton().add(ArtifactType.MARKDOWN, errorReportPath);
-        }
+        createAdditionalArtifacts(imageName, generator, classLoader, error, parsedHostedOptions);
 
         if (imageName == null || generator == null) {
             printErrorMessage(error);
@@ -633,12 +628,14 @@ public class ProgressReporter {
         double totalSeconds = Utils.millisToSeconds(getTimer(TimerCollection.Registry.TOTAL).getTotalTime());
         recordJsonMetric(ResourceUsageKey.TOTAL_SECS, totalSeconds);
 
-        Map<ArtifactType, List<Path>> artifacts = generator.getBuildArtifacts();
-
-        if (!artifacts.isEmpty()) {
-            l().printLineSeparator();
-            printArtifacts(imageName, generator, parsedHostedOptions, artifacts, error);
+        if (jsonHelper != null) {
+            BuildArtifacts.singleton().add(ArtifactType.JSON, jsonHelper.printToFile());
         }
+        Map<ArtifactType, List<Path>> artifacts = generator.getBuildArtifacts();
+        if (!artifacts.isEmpty()) {
+            BuildArtifacts.singleton().add(ArtifactType.TXT, reportBuildArtifacts(NativeImageGenerator.generatedFiles(HostedOptionValues.singleton()), imageName, artifacts));
+        }
+        printArtifacts(artifacts);
 
         l().printHeadlineSeparator();
 
@@ -652,6 +649,17 @@ public class ProgressReporter {
                         .a(error == null ? "in" : "after").a(" ").a(timeStats).a(".").println();
 
         printErrorMessage(error);
+    }
+
+    private static void createAdditionalArtifacts(String imageName, NativeImageGenerator generator, ImageClassLoader classLoader, Throwable error, OptionValues parsedHostedOptions) {
+        if (error != null && !NativeImageOptions.ErrorFileToStdout.getValue()) {
+            Path errorReportPath = NativeImageOptions.getErrorFilePath();
+            ReportUtils.report("GraalVM Native Image Error Report", errorReportPath, p -> VMErrorReporter.generateErrorReport(p, classLoader, error), false);
+            BuildArtifacts.singleton().add(ArtifactType.MARKDOWN, errorReportPath);
+        }
+        if (generator.getBigbang() != null && ImageBuildStatistics.Options.CollectImageBuildStatistics.getValue(parsedHostedOptions)) {
+            BuildArtifacts.singleton().add(ArtifactType.JSON, reportImageBuildStatistics(imageName, generator.getBigbang()));
+        }
     }
 
     private void printErrorMessage(Throwable error) {
@@ -677,7 +685,11 @@ public class ProgressReporter {
         }
     }
 
-    private void printArtifacts(String imageName, NativeImageGenerator generator, OptionValues parsedHostedOptions, Map<ArtifactType, List<Path>> artifacts, Throwable error) {
+    private void printArtifacts(Map<ArtifactType, List<Path>> artifacts) {
+        if (artifacts.isEmpty()) {
+            return;
+        }
+        l().printLineSeparator();
         l().yellowBold().a("Produced artifacts:").reset().println();
         // Use TreeMap to sort paths alphabetically.
         Map<Path, List<String>> pathToTypes = new TreeMap<>();
@@ -686,15 +698,6 @@ public class ProgressReporter {
                 pathToTypes.computeIfAbsent(path, p -> new ArrayList<>()).add(artifactType.name().toLowerCase());
             }
         });
-        if (error == null && jsonHelper != null) {
-            Path jsonMetric = jsonHelper.printToFile();
-            pathToTypes.computeIfAbsent(jsonMetric, p -> new ArrayList<>()).add("json");
-        }
-        if (generator.getBigbang() != null && ImageBuildStatistics.Options.CollectImageBuildStatistics.getValue(parsedHostedOptions)) {
-            Path buildStatisticsPath = reportImageBuildStatistics(imageName, generator.getBigbang());
-            pathToTypes.computeIfAbsent(buildStatisticsPath, p -> new ArrayList<>()).add("raw");
-        }
-        pathToTypes.computeIfAbsent(reportBuildArtifacts(NativeImageGenerator.generatedFiles(HostedOptionValues.singleton()), imageName, artifacts), p -> new ArrayList<>()).add("txt");
         pathToTypes.forEach((path, typeNames) -> {
             l().a(" ").link(path).dim().a(" (").a(String.join(", ", typeNames)).a(")").reset().println();
         });

@@ -40,6 +40,7 @@ public interface BuildArtifacts {
         DEBUG_INFO,
         JSON,
         MARKDOWN,
+        TXT,
     }
 
     static BuildArtifacts singleton() {
