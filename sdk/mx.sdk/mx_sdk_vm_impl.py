@@ -1277,6 +1277,7 @@ class NativePropertiesBuildTask(mx.ProjectBuildTask):
                     '--install-exit-handlers',
                     '--enable-monitoring',
                     '-H:+DumpRuntimeCompilationOnSignal',
+                    '-H:+ErrorFileToStdout',
                 ]
 
             if isinstance(image_config, (mx_sdk.LauncherConfig, mx_sdk.LanguageLibraryConfig)):
